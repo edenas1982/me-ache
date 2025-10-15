@@ -1,0 +1,283 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Localização - Me Ache{% endblock %}
+
+{% block extra_css %}
+<!-- Progress indicator -->
+<style>
+    .progress-container {
+        margin-bottom: 40px;
+    }
+    
+    .progress-bar {
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 3px;
+        width: 57%; /* 4 de 7 etapas */
+        transition: width 0.5s ease;
+    }
+    
+    .progress-text {
+        text-align: center;
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: #718096;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cadastro-container">
+    <div class="cadastro-card">
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <div class="progress-text">Etapa 4 de 7 - Localização</div>
+        </div>
+        
+        <!-- Header -->
+        <div class="cadastro-header">
+            <h1 class="cadastro-title">Onde você está?</h1>
+            <p class="cadastro-subtitle">
+                Sua localização nos ajuda a encontrar pessoas próximas a você
+            </p>
+        </div>
+        
+        <!-- Geolocation Button -->
+        <button type="button" class="btn-geolocation" id="btnGeolocation">
+            <i class="bi bi-geo-alt location-icon"></i>
+            Usar minha localização atual
+        </button>
+        
+        <!-- Form -->
+        <form method="post" id="locationForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="cidade" class="form-label">Sua cidade</label>
+                <div class="autocomplete-container">
+                    <input type="text" 
+                           id="cidade" 
+                           name="cidade" 
+                           class="form-control" 
+                           placeholder="Digite sua cidade (ex: Palotina, Paraná)"
+                           required
+                           autocomplete="off">
+                    <div id="suggestions" class="suggestions-dropdown"></div>
+                </div>
+            </div>
+            
+            <!-- Hidden fields for coordinates and parsed data -->
+            <input type="hidden" id="cidade_nome" name="cidade_nome">
+            <input type="hidden" id="estado" name="estado">
+            <input type="hidden" id="latitude" name="latitude">
+            <input type="hidden" id="longitude" name="longitude">
+            
+            <!-- Location Status -->
+            <div id="locationStatus" class="location-status hidden"></div>
+            
+            <button type="submit" class="btn-continuar" id="btnContinuar" disabled>
+                Continuar
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('locationForm');
+    const btnContinuar = document.getElementById('btnContinuar');
+    const btnGeolocation = document.getElementById('btnGeolocation');
+    const cidadeInput = document.getElementById('cidade');
+    const cidadeNomeInput = document.getElementById('cidade_nome');
+    const estadoInput = document.getElementById('estado');
+    const latitudeInput = document.getElementById('latitude');
+    const longitudeInput = document.getElementById('longitude');
+    const locationStatus = document.getElementById('locationStatus');
+    const suggestionsDiv = document.getElementById('suggestions');
+    
+    // Lista de cidades do Paraná para teste
+    const cidadesParana = [
+        { nome: 'Palotina', estado: 'PR', lat: -24.2839, lng: -53.8403 },
+        { nome: 'Guaira', estado: 'PR', lat: -24.0831, lng: -54.2569 },
+        { nome: 'Toledo', estado: 'PR', lat: -24.7136, lng: -53.7431 },
+        { nome: 'Curitiba', estado: 'PR', lat: -25.4244, lng: -49.2654 },
+        { nome: 'Londrina', estado: 'PR', lat: -23.3045, lng: -51.1696 },
+        { nome: 'Maringá', estado: 'PR', lat: -23.4205, lng: -51.9332 },
+        { nome: 'Ponta Grossa', estado: 'PR', lat: -25.0955, lng: -50.1619 },
+        { nome: 'Cascavel', estado: 'PR', lat: -24.9558, lng: -53.4562 },
+        { nome: 'São José dos Pinhais', estado: 'PR', lat: -25.5309, lng: -49.2081 },
+        { nome: 'Foz do Iguaçu', estado: 'PR', lat: -25.5163, lng: -54.5854 }
+    ];
+    
+    let selectedCity = null;
+    
+    function showStatus(message, type) {
+        locationStatus.textContent = message;
+        locationStatus.className = `location-status ${type}`;
+        locationStatus.classList.remove('hidden');
+    }
+    
+    function hideStatus() {
+        locationStatus.classList.add('hidden');
+    }
+    
+    function updateContinuarButton() {
+        btnContinuar.disabled = !selectedCity;
+    }
+    
+    function showSuggestions(cities) {
+        suggestionsDiv.innerHTML = '';
+        if (cities.length === 0) {
+            suggestionsDiv.style.display = 'none';
+            return;
+        }
+        
+        cities.forEach(city => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.innerHTML = `
+                <span class="suggestion-city">${city.nome}</span>
+                <span class="suggestion-state">${city.estado}</span>
+            `;
+            
+            item.addEventListener('click', function() {
+                selectCity(city);
+            });
+            
+            suggestionsDiv.appendChild(item);
+        });
+        
+        suggestionsDiv.style.display = 'block';
+    }
+    
+    function selectCity(city) {
+        selectedCity = city;
+        cidadeInput.value = `${city.nome}, ${city.estado}`;
+        cidadeNomeInput.value = city.nome;
+        estadoInput.value = city.estado;
+        latitudeInput.value = city.lat;
+        longitudeInput.value = city.lng;
+        
+        suggestionsDiv.style.display = 'none';
+        updateContinuarButton();
+        hideStatus();
+    }
+    
+    function searchCities(query) {
+        if (query.length < 2) {
+            suggestionsDiv.style.display = 'none';
+            selectedCity = null;
+            updateContinuarButton();
+            return;
+        }
+        
+        const filtered = cidadesParana.filter(city => 
+            city.nome.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        showSuggestions(filtered);
+    }
+    
+    // Event listeners
+    cidadeInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        searchCities(query);
+        
+        // Reset selection if user types something different
+        if (selectedCity && !this.value.includes(selectedCity.nome)) {
+            selectedCity = null;
+            cidadeNomeInput.value = '';
+            estadoInput.value = '';
+            latitudeInput.value = '';
+            longitudeInput.value = '';
+            updateContinuarButton();
+        }
+    });
+    
+    cidadeInput.addEventListener('focus', function() {
+        if (this.value.trim().length >= 2) {
+            searchCities(this.value.trim());
+        }
+    });
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!cidadeInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+            suggestionsDiv.style.display = 'none';
+        }
+    });
+    
+    // Geolocalização
+    btnGeolocation.addEventListener('click', function() {
+        if (!navigator.geolocation) {
+            showStatus('Geolocalização não é suportada por este navegador', 'error');
+            return;
+        }
+        
+        btnGeolocation.disabled = true;
+        btnGeolocation.innerHTML = '<i class="bi bi-arrow-clockwise location-icon"></i> Obtendo localização...';
+        showStatus('Obtendo sua localização...', 'info');
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                // Simular busca por cidade próxima (para teste, usar Palotina)
+                const city = cidadesParana[0]; // Palotina
+                selectCity(city);
+                showStatus('Localização obtida com sucesso!', 'success');
+            },
+            function(error) {
+                let message = 'Erro ao obter localização: ';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        message += 'Permissão negada';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message += 'Localização indisponível';
+                        break;
+                    case error.TIMEOUT:
+                        message += 'Tempo esgotado';
+                        break;
+                    default:
+                        message += 'Erro desconhecido';
+                        break;
+                }
+                showStatus(message, 'error');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000
+            }
+        );
+        
+        btnGeolocation.disabled = false;
+        btnGeolocation.innerHTML = '<i class="bi bi-geo-alt location-icon"></i> Usar minha localização atual';
+    });
+    
+    // Validação do formulário
+    form.addEventListener('submit', function(e) {
+        if (!selectedCity) {
+            e.preventDefault();
+            showStatus('Por favor, selecione uma cidade da lista', 'error');
+            return;
+        }
+        
+        console.log('Enviando formulário de localização...', selectedCity);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,1289 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Meu Perfil - Me Ache{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #FF2E6C;
+        --secondary: #0066FF;
+        --bg-main: #F9F9FB;
+        --bg-card: #FFFFFF;
+        --text-primary: #222222;
+        --text-secondary: #777777;
+        --icon-neutral: #555555;
+        --border-light: #E0E0E0;
+        --shadow-light: 0 2px 6px rgba(0,0,0,0.05);
+        --shadow-medium: 0 4px 12px rgba(0,0,0,0.1);
+        --shadow-heavy: 0 8px 24px rgba(0,0,0,0.15);
+        --gradient-primary: linear-gradient(135deg, #FF2E6C, #E91E63);
+        --gradient-gold: linear-gradient(135deg, #f7b500, #ff8c00);
+        --gradient-bg: linear-gradient(180deg, #F9F9FB 0%, #FFFFFF 100%);
+    }
+    
+    * {
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+        color: var(--text-primary);
+        background: var(--gradient-bg);
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+    
+    .feed-container {
+        min-height: 100vh;
+        padding: 0;
+        position: relative;
+    }
+    
+    /* Header Fixo */
+    .feed-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-bottom: 1px solid var(--border-light);
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        animation: slideDown 0.6s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .header-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .header-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--primary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .header-avatar:hover {
+        transform: scale(1.1);
+        box-shadow: var(--shadow-medium);
+    }
+    
+    .header-avatar.vip::after {
+        content: '⭐';
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        font-size: 16px;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+    }
+    
+    .edit-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .edit-btn:hover {
+        background: #e0255a;
+        transform: translateY(-1px);
+    }
+    
+    /* Conteúdo Principal */
+    .feed-content {
+        padding-top: 100px;
+        padding-bottom: 20px;
+    }
+    
+    /* Card Principal do Perfil */
+    .profile-card {
+        background: var(--bg-card);
+        margin: 20px;
+        border-radius: 24px;
+        box-shadow: var(--shadow-light);
+        overflow: hidden;
+        position: relative;
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .profile-card.vip {
+        background: linear-gradient(135deg, #fff8e1, #ffffff);
+        border: 2px solid transparent;
+        background-clip: padding-box;
+        position: relative;
+    }
+    
+    .profile-card.vip::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--gradient-gold);
+        border-radius: 24px;
+        padding: 2px;
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        z-index: -1;
+    }
+    
+    .profile-header {
+        padding: 30px 25px 20px;
+        position: relative;
+    }
+    
+    .profile-avatar-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--bg-card);
+        position: absolute;
+        top: -40px;
+        left: 25px;
+        box-shadow: var(--shadow-medium);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        animation: avatarAppear 0.8s ease-out 0.4s both;
+    }
+    
+    @keyframes avatarAppear {
+        from {
+            opacity: 0;
+            transform: scale(0.8) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+    
+    .profile-avatar-large:hover {
+        transform: scale(1.05);
+    }
+    
+    .profile-info {
+        margin-top: 20px;
+    }
+    
+    .profile-name {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 8px 0;
+    }
+    
+    .profile-badges {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .badge {
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .badge.vip {
+        background: var(--gradient-gold);
+        color: white;
+    }
+    
+    .badge.verified {
+        background: linear-gradient(135deg, #3ea6ff, #1e90ff);
+        color: white;
+    }
+    
+    .profile-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+    }
+    
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #4ade80;
+        animation: statusPulse 2s infinite;
+    }
+    
+    @keyframes statusPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    /* Barra de Progresso */
+    .progress-section {
+        background: var(--gradient-primary);
+        margin: 0 25px 20px;
+        padding: 20px;
+        border-radius: 16px;
+        color: white;
+        text-align: center;
+        animation: slideInLeft 0.8s ease-out 0.6s both;
+    }
+    
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .progress-message {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 15px 0;
+    }
+    
+    .progress-bar-container {
+        background: rgba(255, 255, 255, 0.3);
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress-bar-fill {
+        height: 100%;
+        background: white;
+        border-radius: 5px;
+        transition: width 0.8s ease;
+        position: relative;
+    }
+    
+    .progress-bar-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    .progress-percentage {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    /* Cards de Estatísticas */
+    .stats-container {
+        padding: 0 20px 20px;
+        animation: slideInRight 0.8s ease-out 0.8s both;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .stats-scroll {
+        display: flex;
+        gap: 15px;
+        overflow-x: auto;
+        padding: 10px 0;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    
+    .stats-scroll::-webkit-scrollbar {
+        display: none;
+    }
+    
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 20px;
+        min-width: 140px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-light);
+        scroll-snap-align: start;
+        border: 1px solid var(--border-light);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-medium);
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 8px;
+        color: var(--primary);
+    }
+    
+    .stat-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0 0 8px 0;
+    }
+    
+    .stat-count {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-count.updated {
+        animation: countPulse 0.5s ease;
+    }
+    
+    @keyframes countPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    /* Seção de Progresso Detalhado */
+    .progress-details {
+        background: var(--bg-card);
+        margin: 0 20px 20px;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: var(--shadow-light);
+        animation: fadeInUp 0.8s ease-out 1s both;
+    }
+    
+    .progress-tasks {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .progress-task {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1px solid var(--border-light);
+        transition: all 0.3s ease;
+    }
+    
+    .progress-task:hover {
+        background: #f1f5f9;
+        transform: translateX(5px);
+    }
+    
+    .task-checkbox {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid var(--border-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .task-checkbox.completed {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+    
+    .task-checkbox.pending {
+        background: transparent;
+    }
+    
+    .task-text {
+        flex: 1;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+    
+    /* Acordeões */
+    .accordion-section {
+        margin: 0 20px 20px;
+        animation: fadeInUp 0.8s ease-out 1.2s both;
+    }
+    
+    .accordion-item {
+        background: var(--bg-card);
+        border-radius: 16px;
+        margin-bottom: 12px;
+        box-shadow: var(--shadow-light);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .accordion-item:hover {
+        box-shadow: var(--shadow-medium);
+    }
+    
+    .accordion-header {
+        background: var(--bg-card);
+        border: none;
+        width: 100%;
+        padding: 20px 25px;
+        text-align: left;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+    }
+    
+    .accordion-header:hover {
+        background: #f8fafc;
+    }
+    
+    .accordion-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0;
+    }
+    
+    .accordion-icon {
+        font-size: 1.2rem;
+        color: var(--primary);
+        transition: transform 0.3s ease;
+    }
+    
+    .accordion-icon.rotated {
+        transform: rotate(180deg);
+    }
+    
+    .accordion-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+    
+    .accordion-content.open {
+        max-height: 500px;
+    }
+    
+    .accordion-body {
+        padding: 0 25px 25px;
+    }
+    
+    .config-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .config-item:last-child {
+        border-bottom: none;
+    }
+    
+    .config-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1rem;
+        color: var(--text-primary);
+    }
+    
+    .config-icon {
+        font-size: 1.1rem;
+        color: var(--primary);
+    }
+    
+    .config-action {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+    
+    .config-action:hover {
+        color: #e0255a;
+    }
+    
+    /* Switch */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+    }
+    
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 24px;
+    }
+    
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+        background-color: var(--primary);
+    }
+    
+    input:checked + .slider:before {
+        transform: translateX(26px);
+    }
+    
+    /* Seção de Suporte */
+    .support-section {
+        background: var(--bg-card);
+        margin: 0 20px 20px;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: var(--shadow-light);
+        animation: fadeInUp 0.8s ease-out 1.4s both;
+    }
+    
+    .support-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 20px 0;
+    }
+    
+    .support-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .support-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        background: #f8fafc;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid var(--border-light);
+    }
+    
+    .support-item:hover {
+        background: #f1f5f9;
+        transform: translateX(5px);
+    }
+    
+    .support-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .support-icon {
+        font-size: 1.5rem;
+        color: var(--primary);
+    }
+    
+    .support-text {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin: 0;
+    }
+    
+    .support-action {
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    /* Rodapé */
+    .footer-section {
+        margin: 0 20px 20px;
+        animation: fadeInUp 0.8s ease-out 1.6s both;
+    }
+    
+    .logout-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 18px;
+        border-radius: 16px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+    
+    .logout-btn:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+    }
+    
+    .delete-link {
+        color: #ef4444;
+        text-decoration: none;
+        font-size: 0.9rem;
+        text-align: center;
+        display: block;
+        margin-bottom: 20px;
+    }
+    
+    .delete-link:hover {
+        text-decoration: underline;
+    }
+    
+    .footer-text {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    /* Responsividade */
+    @media (min-width: 768px) {
+        .stats-scroll {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        
+        .stat-card {
+            min-width: auto;
+        }
+        
+        .support-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    /* Animações de entrada sequencial */
+    .feed-content > * {
+        animation-delay: calc(var(--i) * 0.2s);
+    }
+    
+    /* Confete para 100% */
+    .confetti {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+    }
+    
+    .confetti-piece {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: var(--primary);
+        animation: confettiFall 3s linear infinite;
+    }
+    
+    @keyframes confettiFall {
+        0% {
+            transform: translateY(-100vh) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="feed-container">
+    <!-- Header Fixo -->
+    <div class="feed-header">
+        <h1 class="header-title">Me Ache</h1>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            {% if user.foto_perfil %}
+                <img src="{{ user.foto_perfil.url }}" alt="Avatar" class="header-avatar {% if user.is_vip %}vip{% endif %}" onclick="viewPublicProfile()">
+            {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" alt="Avatar" class="header-avatar {% if user.is_vip %}vip{% endif %}" onclick="viewPublicProfile()">
+            {% endif %}
+            <button class="edit-btn" onclick="openEditModal()">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </button>
+        </div>
+    </div>
+    
+    <!-- Conteúdo do Feed -->
+    <div class="feed-content">
+        <!-- Card Principal do Perfil -->
+        <div class="profile-card {% if user.is_vip %}vip{% endif %}">
+            <div class="profile-header">
+                {% if user.foto_perfil %}
+                    <img src="{{ user.foto_perfil.url }}" alt="Minha foto" class="profile-avatar-large" onclick="changePhoto()">
+                {% else %}
+                    <img src="{% static 'images/default-avatar.png' %}" alt="Minha foto" class="profile-avatar-large" onclick="changePhoto()">
+                {% endif %}
+                
+                <div class="profile-info">
+                    <h2 class="profile-name">{{ user.first_name }} {{ user.last_name }}</h2>
+                    
+                    <div class="profile-badges">
+                        {% if user.is_vip %}
+                            <span class="badge vip">
+                                <i class="bi bi-star-fill"></i>VIP
+                            </span>
+                        {% endif %}
+                        {% if user.is_verificado %}
+                            <span class="badge verified">
+                                <i class="bi bi-patch-check-fill"></i>Verificado
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="profile-status">
+                        <div class="status-indicator"></div>
+                        <span>🟢 Online agora</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Barra de Progresso -->
+            <div class="progress-section">
+                <p class="progress-message">Olá, {{ user.first_name }}! Seu perfil está 75% completo 💪</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" style="width: 75%">
+                        <div class="progress-percentage">75%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cards de Estatísticas -->
+        <div class="stats-container">
+            <div class="stats-scroll">
+                <div class="stat-card" onclick="goToVisits()">
+                    <i class="bi bi-eye stat-icon"></i>
+                    <h3 class="stat-title">Visitas</h3>
+                    <p class="stat-count" id="visits-count">219</p>
+                </div>
+                
+                <div class="stat-card" onclick="goToFriends()">
+                    <i class="bi bi-people stat-icon"></i>
+                    <h3 class="stat-title">Amigos</h3>
+                    <p class="stat-count" id="friends-count">47</p>
+                </div>
+                
+                <div class="stat-card" onclick="goToPhotos()">
+                    <i class="bi bi-image stat-icon"></i>
+                    <h3 class="stat-title">Fotos</h3>
+                    <p class="stat-count" id="photos-count">23</p>
+                </div>
+                
+                <div class="stat-card" onclick="goToTokens()">
+                    <i class="bi bi-heart stat-icon"></i>
+                    <h3 class="stat-title">Tokens</h3>
+                    <p class="stat-count" id="tokens-count">156</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progresso Detalhado -->
+        <div class="progress-details">
+            <h3 style="margin: 0 0 20px 0; font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">Tarefas do Perfil</h3>
+            <div class="progress-tasks">
+                <div class="progress-task">
+                    <div class="task-checkbox completed">
+                        <i class="bi bi-check"></i>
+                    </div>
+                    <span class="task-text">Adicionar foto de perfil</span>
+                </div>
+                <div class="progress-task">
+                    <div class="task-checkbox completed">
+                        <i class="bi bi-check"></i>
+                    </div>
+                    <span class="task-text">Verificar conta</span>
+                </div>
+                <div class="progress-task">
+                    <div class="task-checkbox pending">
+                        <i class="bi bi-plus"></i>
+                    </div>
+                    <span class="task-text">Escrever biografia</span>
+                </div>
+                <div class="progress-task">
+                    <div class="task-checkbox pending">
+                        <i class="bi bi-plus"></i>
+                    </div>
+                    <span class="task-text">Fazer primeira postagem</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Acordeões de Configuração -->
+        <div class="accordion-section">
+            <!-- Minha Conta -->
+            <div class="accordion-item">
+                <button class="accordion-header" onclick="toggleAccordion(this)">
+                    <h3 class="accordion-title">
+                        <i class="bi bi-person config-icon"></i>
+                        Minha Conta
+                    </h3>
+                    <i class="bi bi-chevron-down accordion-icon"></i>
+                </button>
+                <div class="accordion-content">
+                    <div class="accordion-body">
+                        <div class="config-item">
+                            <div class="config-label">
+                                <i class="bi bi-pencil config-icon"></i>
+                                Editar perfil
+                            </div>
+                            <a href="{% url 'usuarios:editar_perfil' %}" class="config-action">Editar</a>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">
+                                <i class="bi bi-lock config-icon"></i>
+                                Alterar senha
+                            </div>
+                            <a href="#" class="config-action">Alterar</a>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">
+                                <i class="bi bi-envelope config-icon"></i>
+                                Alterar e-mail
+                            </div>
+                            <a href="#" class="config-action">Alterar</a>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">
+                                <i class="bi bi-trash config-icon"></i>
+                                Excluir conta
+                            </div>
+                            <a href="#" class="config-action" onclick="deleteAccount()">Excluir</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conexões -->
+            <div class="accordion-item">
+                <button class="accordion-header" onclick="toggleAccordion(this)">
+                    <h3 class="accordion-title">
+                        <i class="bi bi-people config-icon"></i>
+                        Conexões
+                    </h3>
+                    <i class="bi bi-chevron-down accordion-icon"></i>
+                </button>
+                <div class="accordion-content">
+                    <div class="accordion-body">
+                        <div class="config-item">
+                            <div class="config-label">
+                                <i class="bi bi-people config-icon"></i>
+                                Amigos e seguidores
+                            </div>
+                            <a href="#" class="config-action">Ver</a>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">
+                                <i class="bi bi-person-x config-icon"></i>
+                                Perfis bloqueados
+                            </div>
+                            <a href="#" class="config-action">Gerenciar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preferências -->
+            <div class="accordion-item">
+                <button class="accordion-header" onclick="toggleAccordion(this)">
+                    <h3 class="accordion-title">
+                        <i class="bi bi-gear config-icon"></i>
+                        Preferências
+                    </h3>
+                    <i class="bi bi-chevron-down accordion-icon"></i>
+                </button>
+                <div class="accordion-content">
+                    <div class="accordion-body">
+                        <div class="config-item">
+                            <div class="config-label">
+                                <i class="bi bi-moon config-icon"></i>
+                                Modo escuro
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="darkMode">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="config-item">
+                            <div class="config-label">
+                                <i class="bi bi-bell config-icon"></i>
+                                Notificações push
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="notifications" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Assinatura e Loja -->
+            <div class="accordion-item">
+                <button class="accordion-header" onclick="toggleAccordion(this)">
+                    <h3 class="accordion-title">
+                        <i class="bi bi-star config-icon"></i>
+                        Assinatura e Loja
+                    </h3>
+                    <i class="bi bi-chevron-down accordion-icon"></i>
+                </button>
+                <div class="accordion-content">
+                    <div class="accordion-body">
+                        {% if user.is_vip %}
+                            <div class="config-item">
+                                <div class="config-label">
+                                    <i class="bi bi-star-fill config-icon"></i>
+                                    Plano VIP ativo
+                                </div>
+                                <span class="badge vip">Ativo até 15/12/2024</span>
+                            </div>
+                        {% else %}
+                            <div class="config-item">
+                                <div class="config-label">
+                                    <i class="bi bi-star config-icon"></i>
+                                    Seja VIP agora
+                                </div>
+                                <a href="{% url 'assinaturas:planos' %}" class="config-action">Assinar</a>
+                            </div>
+                        {% endif %}
+                        <div class="config-item">
+                            <div class="config-label">
+                                <i class="bi bi-heart config-icon"></i>
+                                Loja de tokens
+                            </div>
+                            <a href="#" class="config-action">Acessar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seção de Suporte -->
+        <div class="support-section">
+            <h3 class="support-title">Ajuda e Comunidade</h3>
+            <div class="support-grid">
+                <div class="support-item" onclick="openHelp()">
+                    <div class="support-content">
+                        <i class="bi bi-question-circle support-icon"></i>
+                        <p class="support-text">Central de ajuda</p>
+                    </div>
+                    <span class="support-action">Acessar</span>
+                </div>
+                
+                <div class="support-item" onclick="openSupport()">
+                    <div class="support-content">
+                        <i class="bi bi-chat-dots support-icon"></i>
+                        <p class="support-text">Falar com suporte</p>
+                    </div>
+                    <span class="support-action">Acessar</span>
+                </div>
+                
+                <div class="support-item" onclick="openBlog()">
+                    <div class="support-content">
+                        <i class="bi bi-newspaper support-icon"></i>
+                        <p class="support-text">Blog / Novidades</p>
+                    </div>
+                    <span class="support-action">Acessar</span>
+                </div>
+                
+                <div class="support-item" onclick="shareStory()">
+                    <div class="support-content">
+                        <i class="bi bi-pen support-icon"></i>
+                        <p class="support-text">Compartilhe sua história 💬</p>
+                    </div>
+                    <span class="support-action">Postar</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rodapé -->
+        <div class="footer-section">
+            <button class="logout-btn" onclick="logout()">
+                <i class="bi bi-box-arrow-right me-2"></i>Sair
+            </button>
+            
+            <a href="#" class="delete-link" onclick="deleteAccount()">
+                Excluir conta permanentemente
+            </a>
+            
+            <p class="footer-text">
+                Feito com ❤️ pela equipe Me Ache<br>
+                Versão 1.0.0
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Funções de navegação
+function goToVisits() {
+    window.location.href = '/visitas/';
+}
+
+function goToFriends() {
+    window.location.href = '/amigos/';
+}
+
+function goToPhotos() {
+    window.location.href = '/fotos/';
+}
+
+function goToTokens() {
+    window.location.href = '/loja/tokens/';
+}
+
+function viewPublicProfile() {
+    window.location.href = '/usuarios/perfil/{{ user.username }}/';
+}
+
+function changePhoto() {
+    console.log('Alterar foto');
+}
+
+function openEditModal() {
+    console.log('Abrir modal de edição');
+}
+
+// Funções de suporte
+function openHelp() {
+    window.location.href = '/ajuda/';
+}
+
+function openSupport() {
+    window.location.href = '/suporte/';
+}
+
+function openBlog() {
+    window.location.href = '/blog/';
+}
+
+function shareStory() {
+    console.log('Compartilhar história');
+}
+
+// Funções de conta
+function logout() {
+    if (confirm('Tem certeza que deseja sair?')) {
+        window.location.href = '{% url "usuarios:logout" %}';
+    }
+}
+
+function deleteAccount() {
+    if (confirm('ATENÇÃO: Esta ação é irreversível! Sua conta será excluída permanentemente. Tem certeza?')) {
+        if (confirm('Última confirmação: Excluir conta permanentemente?')) {
+            console.log('Excluir conta');
+        }
+    }
+}
+
+// Acordeões
+function toggleAccordion(header) {
+    const content = header.nextElementSibling;
+    const icon = header.querySelector('.accordion-icon');
+    
+    // Fechar outros acordeões
+    document.querySelectorAll('.accordion-content').forEach(acc => {
+        if (acc !== content) {
+            acc.classList.remove('open');
+            acc.previousElementSibling.querySelector('.accordion-icon').classList.remove('rotated');
+        }
+    });
+    
+    // Toggle atual
+    content.classList.toggle('open');
+    icon.classList.toggle('rotated');
+}
+
+// Atualizar contadores em tempo real
+function updateCounters() {
+    const counters = ['visits-count', 'friends-count', 'photos-count', 'tokens-count'];
+    counters.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            const current = parseInt(element.textContent);
+            const change = Math.floor(Math.random() * 3) - 1;
+            const newValue = Math.max(0, current + change);
+            
+            if (newValue !== current) {
+                element.textContent = newValue;
+                element.classList.add('updated');
+                setTimeout(() => element.classList.remove('updated'), 500);
+            }
+        }
+    });
+}
+
+// Atualizar contadores a cada 30 segundos
+setInterval(updateCounters, 30000);
+
+// Modo escuro
+document.getElementById('darkMode').addEventListener('change', function() {
+    if (this.checked) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('darkMode', 'true');
+    } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('darkMode', 'false');
+    }
+});
+
+// Carregar preferências salvas
+document.addEventListener('DOMContentLoaded', function() {
+    const darkMode = localStorage.getItem('darkMode') === 'true';
+    document.getElementById('darkMode').checked = darkMode;
+    if (darkMode) {
+        document.body.classList.add('dark-mode');
+    }
+    
+    // Animações de entrada sequencial
+    const elements = document.querySelectorAll('.feed-content > *');
+    elements.forEach((el, index) => {
+        el.style.setProperty('--i', index);
+    });
+});
+
+// Confete para 100% (simulado)
+function showConfetti() {
+    const confetti = document.createElement('div');
+    confetti.className = 'confetti';
+    
+    for (let i = 0; i < 50; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.animationDelay = Math.random() * 3 + 's';
+        piece.style.backgroundColor = ['#FF2E6C', '#0066FF', '#f7b500', '#4ade80'][Math.floor(Math.random() * 4)];
+        confetti.appendChild(piece);
+    }
+    
+    document.body.appendChild(confetti);
+    
+    setTimeout(() => {
+        confetti.remove();
+    }, 3000);
+}
+
+// Simular progresso 100%
+function simulateComplete() {
+    const progressBar = document.querySelector('.progress-bar-fill');
+    const progressMessage = document.querySelector('.progress-message');
+    const progressPercentage = document.querySelector('.progress-percentage');
+    
+    progressBar.style.width = '100%';
+    progressPercentage.textContent = '100%';
+    progressMessage.innerHTML = '🎉 Parabéns, seu perfil está completo!';
+    
+    showConfetti();
+}
+
+// Descomente para testar o confete
+// setTimeout(simulateComplete, 5000);
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Gênero - Me Ache{% endblock %}
+
+{% block extra_css %}
+<!-- Progress indicator -->
+<style>
+    .progress-container {
+        margin-bottom: 40px;
+    }
+    
+    .progress-bar {
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 3px;
+        width: 14%; /* 1 de 7 etapas */
+        transition: width 0.5s ease;
+    }
+    
+    .progress-text {
+        text-align: center;
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: #718096;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cadastro-container">
+    <div class="cadastro-card">
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            <div class="progress-text">Etapa 1 de 7 - Gênero</div>
+        </div>
+        
+        <!-- Header -->
+        <div class="cadastro-header">
+            <h1 class="cadastro-title">Como você se identifica?</h1>
+            <p class="cadastro-subtitle">
+                Selecione sua identidade de gênero para personalizar sua experiência
+            </p>
+        </div>
+        
+        <!-- Form -->
+        <form method="post" id="genderForm">
+            {% csrf_token %}
+            <div class="gender-options">
+                {% for value, label in genero_choices %}
+                <div class="gender-option">
+                    <input type="radio" id="genero_{{ forloop.counter }}" name="genero" value="{{ value }}" required>
+                    <label for="genero_{{ forloop.counter }}">{{ label }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <button type="submit" class="btn-continuar" id="btnContinuar" disabled>
+                Continuar
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('genderForm');
+    const btnContinuar = document.getElementById('btnContinuar');
+    const genderInputs = document.querySelectorAll('input[name="genero"]');
+    
+    function updateContinuarButton() {
+        const selected = document.querySelector('input[name="genero"]:checked');
+        btnContinuar.disabled = !selected;
+    }
+    
+    // Event listeners
+    genderInputs.forEach(input => {
+        input.addEventListener('change', updateContinuarButton);
+    });
+    
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        const selected = document.querySelector('input[name="genero"]:checked');
+        if (!selected) {
+            e.preventDefault();
+            return;
+        }
+        console.log('Gênero selecionado:', selected.value);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Meu Perfil - Me Ache{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Profile Card -->
+            <div class="card profile-card">
+                <div class="text-center p-4">
+                    {% if perfil.foto_perfil %}
+                        <img src="{{ perfil.foto_perfil.url }}" alt="Foto de perfil" class="profile-image mb-3">
+                    {% else %}
+                        <div class="profile-image-placeholder mb-3">
+                            <i class="bi bi-person-circle" style="font-size: 200px; color: #e91e63;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    <h2 class="profile-name">{{ perfil.nome_completo }}</h2>
+                    
+                    {% if perfil.mostrar_idade and perfil.idade %}
+                        <p class="profile-age">{{ perfil.idade }} anos</p>
+                    {% endif %}
+                    
+                    {% if perfil.mostrar_localizacao and perfil.cidade %}
+                        <p class="profile-location">
+                            <i class="bi bi-geo-alt me-1"></i>{{ perfil.cidade }}, {{ perfil.estado }}
+                        </p>
+                    {% endif %}
+                    
+                    {% if perfil.is_vip %}
+                        <span class="badge bg-warning text-dark mb-3">
+                            <i class="bi bi-star-fill me-1"></i>VIP
+                        </span>
+                    {% endif %}
+                    
+                    {% if perfil.bio %}
+                        <p class="profile-bio">{{ perfil.bio }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'usuarios:editar_perfil' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-pencil me-2"></i>Editar Perfil
+                        </a>
+                        <a href="{% url 'usuarios:configuracoes' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-gear me-2"></i>Configurações
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-graph-up me-2"></i>Estatísticas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4 class="text-primary">{{ perfil.postagens.count }}</h4>
+                            <small class="text-muted">Postagens</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-success">{{ perfil.relacionamentos_enviados.count }}</h4>
+                            <small class="text-muted">Likes</small>
+                        </div>
+                        <div class="col-4">
+                            <h4 class="text-info">{{ perfil.conversas.count }}</h4>
+                            <small class="text-muted">Conversas</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Recent Posts -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-chat-square-text me-2"></i>Minhas Postagens
+                    </h5>
+                    <a href="{% url 'feed:criar_postagem' %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus me-1"></i>Nova Postagem
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if perfil.postagens.all %}
+                        {% for postagem in perfil.postagens.all|slice:":5" %}
+                            <div class="post-card mb-3">
+                                <div class="post-header">
+                                    <img src="{% if perfil.foto_perfil %}{{ perfil.foto_perfil.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                         alt="Avatar" class="post-avatar">
+                                    <div>
+                                        <p class="post-author">{{ perfil.nome_completo }}</p>
+                                        <p class="post-time" data-time="{{ postagem.data_criacao|date:'c' }}">
+                                            {{ postagem.data_criacao|timesince }} atrás
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="post-content">
+                                    <p>{{ postagem.conteudo }}</p>
+                                    {% if postagem.imagem %}
+                                        <img src="{{ postagem.imagem.url }}" alt="Imagem da postagem" class="post-image">
+                                    {% endif %}
+                                </div>
+                                <div class="post-actions">
+                                    <button class="post-action" data-post-id="{{ postagem.id }}" data-action="like">
+                                        <i class="bi bi-heart"></i>
+                                        <span class="like-count">{{ postagem.total_curtidas }}</span>
+                                    </button>
+                                    <button class="post-action">
+                                        <i class="bi bi-chat"></i>
+                                        <span>{{ postagem.total_comentarios }}</span>
+                                    </button>
+                                    <button class="post-action">
+                                        <i class="bi bi-share"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="text-center">
+                            <a href="{% url 'feed:home' %}" class="btn btn-outline-primary">
+                                Ver todas as postagens
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-chat-square-text" style="font-size: 3rem; color: #e9ecef;"></i>
+                            <h5 class="mt-3 text-muted">Nenhuma postagem ainda</h5>
+                            <p class="text-muted">Compartilhe algo interessante com a comunidade!</p>
+                            <a href="{% url 'feed:criar_postagem' %}" class="btn btn-primary">
+                                <i class="bi bi-plus me-2"></i>Criar primeira postagem
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize relative time formatting
+    const timeElements = document.querySelectorAll('[data-time]');
+    timeElements.forEach(element => {
+        const timeString = element.dataset.time;
+        element.textContent = formatRelativeTime(timeString);
+    });
+});
+</script>
+{% endblock %}

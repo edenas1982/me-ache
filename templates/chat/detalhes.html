@@ -1,0 +1,218 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Conversa - Me Ache{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Lista de Conversas -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Buscar conversas..." id="buscarConversas">
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'chat:lista' %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <i class="bi bi-arrow-left" style="font-size: 1.5rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">Voltar para conversas</h6>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <!-- Chat Container -->
+            <div class="card chat-container">
+                <!-- Header da Conversa -->
+                <div class="chat-header">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            {% for participante in conversa.participantes.all %}
+                                {% if participante != user %}
+                                    {% if participante.foto_perfil %}
+                                        <img src="{{ participante.foto_perfil.url }}" 
+                                             alt="Avatar" class="rounded-circle" width="40" height="40">
+                                    {% else %}
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
+                                             style="width: 40px; height: 40px;">
+                                            <i class="bi bi-person text-primary"></i>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <div>
+                            <h6 class="mb-0 text-white">
+                                {% for participante in conversa.participantes.all %}
+                                    {% if participante != user %}
+                                        {{ participante.nome_completo }}
+                                        {% if participante.is_vip %}
+                                            <i class="bi bi-star-fill text-warning ms-1"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </h6>
+                            <small class="text-white-50">
+                                {% for participante in conversa.participantes.all %}
+                                    {% if participante != user %}
+                                        {% if participante.ultima_atividade %}
+                                            Online há {{ participante.ultima_atividade|timesince }}
+                                        {% else %}
+                                            Offline
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Mensagens -->
+                <div class="chat-messages" id="chatMessages">
+                    {% for mensagem in mensagens %}
+                        <div class="message {% if mensagem.remetente == user %}sent{% else %}received{% endif %}">
+                            <div class="message-content">
+                                <div>{{ mensagem.conteudo|linebreaks }}</div>
+                                <div class="message-time">
+                                    {{ mensagem.data_criacao|date:"H:i" }}
+                                    {% if mensagem.remetente == user %}
+                                        {% if mensagem.is_lida %}
+                                            <i class="bi bi-check2-all text-primary ms-1"></i>
+                                        {% else %}
+                                            <i class="bi bi-check2 ms-1"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-chat-dots" style="font-size: 3rem; color: #e9ecef;"></i>
+                            <p class="text-muted mt-3">Nenhuma mensagem ainda</p>
+                            <p class="text-muted">Seja o primeiro a enviar uma mensagem!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Input de Mensagem -->
+                <div class="chat-input">
+                    <form id="chatForm" data-conversation-id="{{ conversa.id }}">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="message" placeholder="Digite sua mensagem..." required>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    const chatForm = document.getElementById('chatForm');
+    
+    // Scroll para o final das mensagens
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Enviar mensagem
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        sendMessage();
+    });
+    
+    // Auto-scroll quando novas mensagens chegarem
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length > 0) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        });
+    });
+    
+    observer.observe(chatMessages, { childList: true });
+});
+
+function sendMessage() {
+    const form = document.getElementById('chatForm');
+    const messageInput = form.querySelector('input[name="message"]');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    const conversationId = form.dataset.conversationId;
+    const chatMessages = document.getElementById('chatMessages');
+    
+    // Adicionar mensagem à UI imediatamente
+    addMessageToUI(message, true);
+    messageInput.value = '';
+    
+    // Enviar para o servidor
+    fetch(`/chat/conversa/${conversationId}/enviar/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `conteudo=${encodeURIComponent(message)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            showAlert('Erro ao enviar mensagem', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Erro de conexão', 'danger');
+    });
+}
+
+function addMessageToUI(message, isSent = false) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+    
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('pt-BR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <div>${message}</div>
+            <div class="message-time">${timeString}</div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Buscar conversas
+document.getElementById('buscarConversas').addEventListener('input', function() {
+    const termo = this.value.toLowerCase();
+    // Implementar busca de conversas se necessário
+});
+</script>
+{% endblock %}

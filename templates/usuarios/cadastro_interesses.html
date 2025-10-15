@@ -1,0 +1,240 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Seus Interesses - Me Ache{% endblock %}
+
+{% block extra_head %}
+<style>
+    .cadastro-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .cadastro-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .cadastro-header {
+        margin-bottom: 30px;
+    }
+    
+    .cadastro-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .cadastro-subtitle {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    
+    .interesse-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .interesse-option {
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .interesse-option input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    .interesse-option label {
+        display: block;
+        padding: 20px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        color: #333;
+        text-align: center;
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .interesse-option:hover label {
+        border-color: #667eea;
+        background: #f8f9ff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+    }
+    
+    .interesse-option input[type="checkbox"]:checked + label {
+        border-color: #667eea;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-continuar {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        color: white;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-continuar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-continuar:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 4px;
+        background: #e9ecef;
+        border-radius: 2px;
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        width: 28.57%;
+        transition: width 0.3s ease;
+    }
+    
+    .step-indicator {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .selected-count {
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cadastro-container">
+    <div class="cadastro-card">
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            Etapa 2 de 7
+        </div>
+        
+        <!-- Header -->
+        <div class="cadastro-header">
+            <h1 class="cadastro-title">Quem te interessa?</h1>
+            <p class="cadastro-subtitle">
+                Selecione os tipos de pessoas que você gostaria de conhecer
+            </p>
+        </div>
+        
+        <!-- Selected Count -->
+        <div class="selected-count" id="selectedCount">
+            Selecione pelo menos uma opção
+        </div>
+        
+        <!-- Form -->
+        <form method="post" id="interessesForm">
+            {% csrf_token %}
+            <div class="interesse-options">
+                {% for value, label in interesse_choices %}
+                <div class="interesse-option">
+                    <input type="checkbox" id="interesse_{{ value }}" name="interesses" value="{{ value }}">
+                    <label for="interesse_{{ value }}">{{ label }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <button type="submit" class="btn-continuar" id="btnContinuar" disabled>
+                Continuar
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('interessesForm');
+    const btnContinuar = document.getElementById('btnContinuar');
+    const checkboxes = document.querySelectorAll('input[name="interesses"]');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    function updateSelectedCount() {
+        const selected = document.querySelectorAll('input[name="interesses"]:checked');
+        const count = selected.length;
+        
+        if (count === 0) {
+            selectedCount.textContent = 'Selecione pelo menos uma opção';
+            btnContinuar.disabled = true;
+        } else if (count === 1) {
+            selectedCount.textContent = '1 interesse selecionado';
+            btnContinuar.disabled = false;
+        } else {
+            selectedCount.textContent = `${count} interesses selecionados`;
+            btnContinuar.disabled = false;
+        }
+    }
+    
+    // Atualizar contador quando checkboxes mudarem
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+    
+    // Animação suave ao selecionar
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Adicionar efeito visual
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    label.style.transform = 'translateY(-2px)';
+                }, 150);
+            } else {
+                label.style.transform = 'scale(1)';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

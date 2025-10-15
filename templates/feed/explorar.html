@@ -1,0 +1,376 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Explorar Pessoas - Me Ache{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-compass me-2"></i>Explorar Pessoas</h2>
+                <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#filtrosModal">
+                    <i class="bi bi-funnel me-2"></i>Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtros Rápidos -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <label class="form-label">Idade</label>
+                            <div class="d-flex gap-2">
+                                <input type="number" class="form-control" id="idadeMin" placeholder="Min" min="18" max="100" value="18">
+                                <span class="align-self-end">-</span>
+                                <input type="number" class="form-control" id="idadeMax" placeholder="Max" min="18" max="100" value="50">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Distância</label>
+                            <select class="form-control" id="distancia">
+                                <option value="5">5 km</option>
+                                <option value="10">10 km</option>
+                                <option value="25" selected>25 km</option>
+                                <option value="50">50 km</option>
+                                <option value="100">100 km</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Gênero</label>
+                            <select class="form-control" id="genero">
+                                <option value="">Todos</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Feminino</option>
+                                <option value="O">Outro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-grid">
+                                <button class="btn btn-primary" onclick="aplicarFiltros()">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Grid de Usuários -->
+    <div class="row" id="usuariosGrid">
+        {% for usuario in usuarios %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card profile-card h-100">
+                    <div class="position-relative">
+                        {% if usuario.foto_perfil %}
+                            <img src="{{ usuario.foto_perfil.url }}" alt="Foto de perfil" class="card-img-top profile-image" style="height: 250px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 250px;">
+                                <i class="bi bi-person-circle" style="font-size: 120px; color: #e91e63;"></i>
+                            </div>
+                        {% endif %}
+                        
+                        {% if usuario.is_vip %}
+                            <span class="position-absolute top-0 end-0 m-2 badge bg-warning text-dark">
+                                <i class="bi bi-star-fill me-1"></i>VIP
+                            </span>
+                        {% endif %}
+                        
+                        <div class="position-absolute bottom-0 start-0 end-0 p-3" style="background: linear-gradient(transparent, rgba(0,0,0,0.7));">
+                            <h5 class="text-white mb-1">{{ usuario.nome_completo }}</h5>
+                            {% if usuario.mostrar_idade and usuario.idade %}
+                                <p class="text-white-50 mb-0">{{ usuario.idade }} anos</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        {% if usuario.mostrar_localizacao and usuario.cidade %}
+                            <p class="text-muted mb-2">
+                                <i class="bi bi-geo-alt me-1"></i>{{ usuario.cidade }}, {{ usuario.estado }}
+                            </p>
+                        {% endif %}
+                        
+                        {% if usuario.bio %}
+                            <p class="card-text">{{ usuario.bio|truncatewords:15 }}</p>
+                        {% endif %}
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>{{ usuario.ultima_atividade|timesince }} atrás
+                            </small>
+                            <div class="d-flex gap-1">
+                                <button class="btn btn-outline-danger btn-sm" onclick="rejeitarUsuario({{ usuario.id }})">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                                <button class="btn btn-outline-success btn-sm" onclick="curtirUsuario({{ usuario.id }})">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="superCurtirUsuario({{ usuario.id }})">
+                                    <i class="bi bi-star"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-people" style="font-size: 4rem; color: #e9ecef;"></i>
+                        <h4 class="mt-3 text-muted">Nenhuma pessoa encontrada</h4>
+                        <p class="text-muted">Tente ajustar os filtros ou volte mais tarde!</p>
+                        <button class="btn btn-primary" onclick="limparFiltros()">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Limpar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Paginação -->
+    {% if usuarios.has_other_pages %}
+        <nav aria-label="Navegação de usuários">
+            <ul class="pagination justify-content-center mt-4">
+                {% if usuarios.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ usuarios.previous_page_number }}">Anterior</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in usuarios.paginator.page_range %}
+                    {% if usuarios.number == num %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ num }}</span>
+                        </li>
+                    {% elif num > usuarios.number|add:'-3' and num < usuarios.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if usuarios.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ usuarios.next_page_number }}">Próxima</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+<!-- Modal de Filtros Avançados -->
+<div class="modal fade" id="filtrosModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-funnel me-2"></i>Filtros Avançados
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="filtrosForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Idade Mínima</label>
+                                <input type="range" class="form-range" id="idadeMinRange" min="18" max="100" value="18">
+                                <div class="d-flex justify-content-between">
+                                    <small>18</small>
+                                    <small id="idadeMinValue">18</small>
+                                    <small>100</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Idade Máxima</label>
+                                <input type="range" class="form-range" id="idadeMaxRange" min="18" max="100" value="50">
+                                <div class="d-flex justify-content-between">
+                                    <small>18</small>
+                                    <small id="idadeMaxValue">50</small>
+                                    <small>100</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Distância Máxima (km)</label>
+                                <input type="range" class="form-range" id="distanciaRange" min="1" max="500" value="25">
+                                <div class="d-flex justify-content-between">
+                                    <small>1 km</small>
+                                    <small id="distanciaValue">25 km</small>
+                                    <small>500 km</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Gênero</label>
+                                <select class="form-control" id="generoSelect">
+                                    <option value="">Todos</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Feminino</option>
+                                    <option value="O">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Cidade</label>
+                                <input type="text" class="form-control" id="cidadeInput" placeholder="Digite a cidade">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Estado</label>
+                                <select class="form-control" id="estadoSelect">
+                                    <option value="">Todos</option>
+                                    <option value="AC">Acre</option>
+                                    <option value="AL">Alagoas</option>
+                                    <option value="AP">Amapá</option>
+                                    <option value="AM">Amazonas</option>
+                                    <option value="BA">Bahia</option>
+                                    <option value="CE">Ceará</option>
+                                    <option value="DF">Distrito Federal</option>
+                                    <option value="ES">Espírito Santo</option>
+                                    <option value="GO">Goiás</option>
+                                    <option value="MA">Maranhão</option>
+                                    <option value="MT">Mato Grosso</option>
+                                    <option value="MS">Mato Grosso do Sul</option>
+                                    <option value="MG">Minas Gerais</option>
+                                    <option value="PA">Pará</option>
+                                    <option value="PB">Paraíba</option>
+                                    <option value="PR">Paraná</option>
+                                    <option value="PE">Pernambuco</option>
+                                    <option value="PI">Piauí</option>
+                                    <option value="RJ">Rio de Janeiro</option>
+                                    <option value="RN">Rio Grande do Norte</option>
+                                    <option value="RS">Rio Grande do Sul</option>
+                                    <option value="RO">Rondônia</option>
+                                    <option value="RR">Roraima</option>
+                                    <option value="SC">Santa Catarina</option>
+                                    <option value="SP">São Paulo</option>
+                                    <option value="SE">Sergipe</option>
+                                    <option value="TO">Tocantins</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="apenasVip">
+                            <label class="form-check-label" for="apenasVip">
+                                Apenas usuários VIP
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="apenasOnline">
+                            <label class="form-check-label" for="apenasOnline">
+                                Apenas usuários online
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-outline-primary" onclick="limparFiltros()">Limpar</button>
+                <button type="button" class="btn btn-primary" onclick="aplicarFiltrosAvancados()">Aplicar Filtros</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Atualizar valores dos sliders
+document.getElementById('idadeMinRange').addEventListener('input', function() {
+    document.getElementById('idadeMinValue').textContent = this.value;
+    document.getElementById('idadeMin').value = this.value;
+});
+
+document.getElementById('idadeMaxRange').addEventListener('input', function() {
+    document.getElementById('idadeMaxValue').textContent = this.value;
+    document.getElementById('idadeMax').value = this.value;
+});
+
+document.getElementById('distanciaRange').addEventListener('input', function() {
+    document.getElementById('distanciaValue').textContent = this.value + ' km';
+    document.getElementById('distancia').value = this.value;
+});
+
+function aplicarFiltros() {
+    const idadeMin = document.getElementById('idadeMin').value;
+    const idadeMax = document.getElementById('idadeMax').value;
+    const distancia = document.getElementById('distancia').value;
+    const genero = document.getElementById('genero').value;
+    
+    const params = new URLSearchParams();
+    if (idadeMin) params.append('idade_min', idadeMin);
+    if (idadeMax) params.append('idade_max', idadeMax);
+    if (distancia) params.append('distancia', distancia);
+    if (genero) params.append('genero', genero);
+    
+    window.location.href = '?' + params.toString();
+}
+
+function aplicarFiltrosAvancados() {
+    const form = document.getElementById('filtrosForm');
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+    
+    for (let [key, value] of formData.entries()) {
+        if (value) params.append(key, value);
+    }
+    
+    // Adicionar valores dos sliders
+    params.set('idade_min', document.getElementById('idadeMinRange').value);
+    params.set('idade_max', document.getElementById('idadeMaxRange').value);
+    params.set('distancia', document.getElementById('distanciaRange').value);
+    
+    window.location.href = '?' + params.toString();
+}
+
+function limparFiltros() {
+    window.location.href = window.location.pathname;
+}
+
+function curtirUsuario(userId) {
+    // Implementar curtida
+    console.log('Curtir usuário:', userId);
+    showAlert('Usuário curtido!', 'success');
+}
+
+function rejeitarUsuario(userId) {
+    // Implementar rejeição
+    console.log('Rejeitar usuário:', userId);
+    showAlert('Usuário rejeitado', 'info');
+}
+
+function superCurtirUsuario(userId) {
+    // Implementar super curtida
+    console.log('Super curtir usuário:', userId);
+    showAlert('Super curtida enviada!', 'warning');
+}
+</script>
+{% endblock %}

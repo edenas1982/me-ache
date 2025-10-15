@@ -1,0 +1,354 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Nome de Usuário - Me Ache{% endblock %}
+
+{% block extra_head %}
+<style>
+    .cadastro-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .cadastro-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 40px;
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .cadastro-header {
+        margin-bottom: 30px;
+    }
+    
+    .cadastro-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .cadastro-subtitle {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    
+    .form-group {
+        margin-bottom: 30px;
+        text-align: left;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .input-group {
+        position: relative;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 15px 50px 15px 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: #fff;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .validation-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .validation-icon.valid {
+        color: #28a745;
+    }
+    
+    .validation-icon.invalid {
+        color: #dc3545;
+    }
+    
+    .validation-icon.loading {
+        color: #ffc107;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: translateY(-50%) rotate(0deg); }
+        100% { transform: translateY(-50%) rotate(360deg); }
+    }
+    
+    .validation-message {
+        margin-top: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .validation-message.valid {
+        color: #28a745;
+    }
+    
+    .validation-message.invalid {
+        color: #dc3545;
+    }
+    
+    .validation-message.loading {
+        color: #ffc107;
+    }
+    
+    .btn-continuar {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        color: white;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-continuar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-continuar:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 4px;
+        background: #e9ecef;
+        border-radius: 2px;
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        width: 42.86%;
+        transition: width 0.3s ease;
+    }
+    
+    .step-indicator {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .username-rules {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+        text-align: left;
+    }
+    
+    .username-rules h6 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .username-rules ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .username-rules li {
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cadastro-container">
+    <div class="cadastro-card">
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            Etapa 3 de 7
+        </div>
+        
+        <!-- Header -->
+        <div class="cadastro-header">
+            <h1 class="cadastro-title">Escolha seu nome de usuário</h1>
+            <p class="cadastro-subtitle">
+                Este será seu nome de exibição no Me Ache
+            </p>
+        </div>
+        
+        <!-- Form -->
+        <form method="post" id="usernameForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username" class="form-label">Nome de usuário</label>
+                <div class="input-group">
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           class="form-control" 
+                           placeholder="Digite seu nome de usuário"
+                           required
+                           autocomplete="username">
+                    <div class="validation-icon" id="validationIcon" style="display: none;">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                </div>
+                <div class="validation-message" id="validationMessage"></div>
+            </div>
+            
+            <button type="submit" class="btn-continuar" id="btnContinuar" disabled>
+                Continuar
+            </button>
+        </form>
+        
+        <!-- Username Rules -->
+        <div class="username-rules">
+            <h6>Regras para nome de usuário:</h6>
+            <ul>
+                <li>Use apenas letras, números e pontos</li>
+                <li>Mínimo de 3 caracteres</li>
+                <li>Máximo de 30 caracteres</li>
+                <li>Deve ser único</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('usernameForm');
+    const usernameInput = document.getElementById('username');
+    const btnContinuar = document.getElementById('btnContinuar');
+    const validationIcon = document.getElementById('validationIcon');
+    const validationMessage = document.getElementById('validationMessage');
+    
+    let validationTimeout;
+    let isValid = false;
+    
+    function validateUsername(username) {
+        // Validação básica no frontend
+        if (username.length < 3) {
+            return { valid: false, message: 'Mínimo de 3 caracteres' };
+        }
+        if (username.length > 30) {
+            return { valid: false, message: 'Máximo de 30 caracteres' };
+        }
+        if (!/^[a-zA-Z0-9.]+$/.test(username)) {
+            return { valid: false, message: 'Use apenas letras, números e pontos' };
+        }
+        return { valid: true, message: 'Verificando disponibilidade...' };
+    }
+    
+    function showValidation(icon, message, type) {
+        validationIcon.style.display = 'block';
+        validationIcon.className = `validation-icon ${type}`;
+        validationIcon.innerHTML = icon;
+        validationMessage.textContent = message;
+        validationMessage.className = `validation-message ${type}`;
+    }
+    
+    function checkUsernameAvailability(username) {
+        if (!username) {
+            validationIcon.style.display = 'none';
+            validationMessage.textContent = '';
+            btnContinuar.disabled = true;
+            isValid = false;
+            return;
+        }
+        
+        const frontendValidation = validateUsername(username);
+        if (!frontendValidation.valid) {
+            showValidation('<i class="bi bi-x-circle-fill"></i>', frontendValidation.message, 'invalid');
+            btnContinuar.disabled = true;
+            isValid = false;
+            return;
+        }
+        
+        showValidation('<i class="bi bi-arrow-clockwise"></i>', 'Verificando disponibilidade...', 'loading');
+        btnContinuar.disabled = true;
+        
+        fetch('{% url "usuarios:validar_username" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ username: username })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.disponivel) {
+                showValidation('<i class="bi bi-check-circle-fill"></i>', data.message, 'valid');
+                btnContinuar.disabled = false;
+                isValid = true;
+            } else {
+                showValidation('<i class="bi bi-x-circle-fill"></i>', data.message, 'invalid');
+                btnContinuar.disabled = true;
+                isValid = false;
+            }
+        })
+        .catch(error => {
+            showValidation('<i class="bi bi-exclamation-triangle-fill"></i>', 'Erro na verificação', 'invalid');
+            btnContinuar.disabled = true;
+            isValid = false;
+        });
+    }
+    
+    // Validar username conforme o usuário digita
+    usernameInput.addEventListener('input', function() {
+        clearTimeout(validationTimeout);
+        const username = this.value.trim();
+        
+        validationTimeout = setTimeout(() => {
+            checkUsernameAvailability(username);
+        }, 500); // Aguardar 500ms após parar de digitar
+    });
+    
+    // Prevenir envio se não estiver válido
+    form.addEventListener('submit', function(e) {
+        if (!isValid) {
+            e.preventDefault();
+            usernameInput.focus();
+        }
+    });
+});
+</script>
+{% endblock %}

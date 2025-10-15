@@ -1,0 +1,277 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Me Ache - Encontre sua pessoa especial{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section bg-gradient-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    Encontre sua pessoa especial no <span class="text-warning">Me Ache</span>
+                </h1>
+                <p class="lead mb-4">
+                    Conecte-se com pessoas incríveis, faça novos amigos e encontre relacionamentos significativos 
+                    através de uma plataforma segura e divertida.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'usuarios:cadastro_genero' %}" class="btn btn-warning btn-lg px-4">
+                        <i class="bi bi-person-plus me-2"></i>Começar Agora
+                    </a>
+                    <a href="{% url 'usuarios:login' %}" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <img src="{% static 'images/hero-illustration.svg' %}" alt="Me Ache" class="img-fluid" style="max-height: 400px;">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold mb-3">Por que escolher o Me Ache?</h2>
+                <p class="lead text-muted">Recursos pensados para facilitar suas conexões</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-heart-fill text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Matches Inteligentes</h5>
+                        <p class="card-text text-muted">
+                            Nosso algoritmo analisa suas preferências e localização para sugerir 
+                            pessoas compatíveis com você.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Segurança Garantida</h5>
+                        <p class="card-text text-muted">
+                            Perfis verificados, moderação ativa e privacidade protegida para 
+                            uma experiência segura e confiável.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="feature-icon mb-3">
+                            <i class="bi bi-chat-dots text-info" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="card-title">Chat Integrado</h5>
+                        <p class="card-text text-muted">
+                            Converse diretamente na plataforma com mensagens, fotos e vídeos. 
+                            Tudo em um só lugar!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How it Works Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold mb-3">Como Funciona</h2>
+                <p class="lead text-muted">Simples e fácil de usar</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="step-number mb-3">
+                    <span class="badge bg-primary rounded-circle p-3" style="font-size: 1.5rem;">1</span>
+                </div>
+                <h5>Crie seu Perfil</h5>
+                <p class="text-muted">
+                    Complete seu perfil com fotos, interesses e informações sobre você. 
+                    Quanto mais completo, melhor!
+                </p>
+            </div>
+            
+            <div class="col-md-4 text-center">
+                <div class="step-number mb-3">
+                    <span class="badge bg-primary rounded-circle p-3" style="font-size: 1.5rem;">2</span>
+                </div>
+                <h5>Explore e Conecte</h5>
+                <p class="text-muted">
+                    Navegue pelos perfis sugeridos, curta quem te interessar e 
+                    aguarde o match para começar a conversar.
+                </p>
+            </div>
+            
+            <div class="col-md-4 text-center">
+                <div class="step-number mb-3">
+                    <span class="badge bg-primary rounded-circle p-3" style="font-size: 1.5rem;">3</span>
+                </div>
+                <h5>Converse e Conheça</h5>
+                <p class="text-muted">
+                    Use nosso chat integrado para conversar, trocar fotos e 
+                    marcar encontros presenciais.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold mb-3">O que nossos usuários dizem</h2>
+                <p class="lead text-muted">Histórias reais de conexões incríveis</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{% static 'images/avatar1.jpg' %}" alt="Maria" class="rounded-circle me-3" width="50" height="50">
+                            <div>
+                                <h6 class="mb-0">Maria Silva</h6>
+                                <small class="text-muted">São Paulo, SP</small>
+                            </div>
+                        </div>
+                        <p class="card-text">
+                            "Conheci meu namorado no Me Ache há 6 meses. A plataforma é muito intuitiva 
+                            e segura. Recomendo para todos!"
+                        </p>
+                        <div class="text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{% static 'images/avatar2.jpg' %}" alt="João" class="rounded-circle me-3" width="50" height="50">
+                            <div>
+                                <h6 class="mb-0">João Santos</h6>
+                                <small class="text-muted">Rio de Janeiro, RJ</small>
+                            </div>
+                        </div>
+                        <p class="card-text">
+                            "Excelente para fazer novas amizades! A interface é moderna e 
+                            o sistema de matches é muito eficiente."
+                        </p>
+                        <div class="text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="{% static 'images/avatar3.jpg' %}" alt="Ana" class="rounded-circle me-3" width="50" height="50">
+                            <div>
+                                <h6 class="mb-0">Ana Costa</h6>
+                                <small class="text-muted">Belo Horizonte, MG</small>
+                            </div>
+                        </div>
+                        <p class="card-text">
+                            "Adorei a experiência! Pessoas reais, conversas genuínas. 
+                            Definitivamente vale a pena experimentar."
+                        </p>
+                        <div class="text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 class="display-5 fw-bold mb-4">Pronto para encontrar sua pessoa especial?</h2>
+                <p class="lead mb-4">
+                    Junte-se a milhares de pessoas que já encontraram conexões incríveis no Me Ache.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'usuarios:cadastro_genero' %}" class="btn btn-warning btn-lg px-5">
+                        <i class="bi bi-person-plus me-2"></i>Cadastre-se Grátis
+                    </a>
+                    <a href="{% url 'usuarios:login' %}" class="btn btn-outline-light btn-lg px-5">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Já tenho conta
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #e91e63, #ff6b9d);
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #e91e63, #ff6b9d);
+}
+
+.feature-icon {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-number {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+{% endblock %}

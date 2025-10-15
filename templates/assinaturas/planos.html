@@ -1,0 +1,258 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Planos VIP - Me Ache{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h1 class="display-4 fw-bold mb-3">
+                <i class="bi bi-star-fill text-warning me-2"></i>Planos VIP
+            </h1>
+            <p class="lead text-muted">Desbloqueie recursos exclusivos e encontre sua pessoa especial mais rapidamente</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        {% for plano in planos %}
+            <div class="col-md-4 col-lg-3 mb-4">
+                <div class="card h-100 {% if plano.nome == 'Premium' %}border-warning shadow-lg{% endif %}">
+                    {% if plano.nome == 'Premium' %}
+                        <div class="card-header bg-warning text-dark text-center">
+                            <span class="badge bg-dark">MAIS POPULAR</span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="card-body text-center">
+                        <h3 class="card-title">{{ plano.nome }}</h3>
+                        <div class="mb-3">
+                            <span class="display-6 fw-bold text-primary">R$ {{ plano.preco_mensal|floatformat:2 }}</span>
+                            <small class="text-muted">/mês</small>
+                        </div>
+                        
+                        {% if plano.preco_anual %}
+                            <div class="mb-3">
+                                <span class="h5 text-success">R$ {{ plano.preco_anual|floatformat:2 }}</span>
+                                <small class="text-muted">/ano</small>
+                                <br>
+                                <small class="text-success">Economize {{ plano.preco_mensal|mul:12|sub:plano.preco_anual|floatformat:2 }} por ano!</small>
+                            </div>
+                        {% endif %}
+                        
+                        <p class="card-text text-muted mb-4">{{ plano.descricao }}</p>
+                        
+                        <ul class="list-unstyled">
+                            {% if plano.likes_ilimitados %}
+                                <li class="mb-2">
+                                    <i class="bi bi-heart-fill text-primary me-2"></i>
+                                    Likes ilimitados
+                                </li>
+                            {% endif %}
+                            
+                            {% if plano.super_likes_diarios > 0 %}
+                                <li class="mb-2">
+                                    <i class="bi bi-star-fill text-warning me-2"></i>
+                                    {{ plano.super_likes_diarios }} Super Likes por dia
+                                </li>
+                            {% endif %}
+                            
+                            {% if plano.boost_perfil %}
+                                <li class="mb-2">
+                                    <i class="bi bi-lightning-fill text-info me-2"></i>
+                                    Boost de perfil
+                                </li>
+                            {% endif %}
+                            
+                            {% if plano.filtros_avancados %}
+                                <li class="mb-2">
+                                    <i class="bi bi-funnel-fill text-success me-2"></i>
+                                    Filtros avançados
+                                </li>
+                            {% endif %}
+                            
+                            {% if plano.ver_quem_curtiu %}
+                                <li class="mb-2">
+                                    <i class="bi bi-eye-fill text-purple me-2"></i>
+                                    Ver quem te curtiu
+                                </li>
+                            {% endif %}
+                            
+                            {% if plano.desfazer_ultimo_like %}
+                                <li class="mb-2">
+                                    <i class="bi bi-arrow-counterclockwise text-danger me-2"></i>
+                                    Desfazer último like
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    
+                    <div class="card-footer bg-transparent">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'assinaturas:assinar' plano.id %}" 
+                               class="btn {% if plano.nome == 'Premium' %}btn-warning{% else %}btn-primary{% endif %}">
+                                <i class="bi bi-credit-card me-2"></i>Assinar Agora
+                            </a>
+                            
+                            {% if plano.preco_anual %}
+                                <a href="{% url 'assinaturas:assinar' plano.id %}?tipo=anual" 
+                                   class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-calendar-check me-1"></i>Assinatura Anual
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-star" style="font-size: 4rem; color: #e9ecef;"></i>
+                        <h4 class="mt-3 text-muted">Nenhum plano disponível</h4>
+                        <p class="text-muted">Os planos VIP estarão disponíveis em breve!</p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Comparação de Recursos -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-bar-chart me-2"></i>Comparação de Recursos
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Recurso</th>
+                                    <th class="text-center">Gratuito</th>
+                                    {% for plano in planos %}
+                                        <th class="text-center">{{ plano.nome }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Likes por dia</td>
+                                    <td class="text-center">10</td>
+                                    {% for plano in planos %}
+                                        <td class="text-center">
+                                            {% if plano.likes_ilimitados %}
+                                                <i class="bi bi-infinity text-primary"></i>
+                                            {% else %}
+                                                50
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td>Super Likes por dia</td>
+                                    <td class="text-center">1</td>
+                                    {% for plano in planos %}
+                                        <td class="text-center">{{ plano.super_likes_diarios }}</td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td>Filtros básicos</td>
+                                    <td class="text-center"><i class="bi bi-check text-success"></i></td>
+                                    {% for plano in planos %}
+                                        <td class="text-center"><i class="bi bi-check text-success"></i></td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td>Filtros avançados</td>
+                                    <td class="text-center"><i class="bi bi-x text-danger"></i></td>
+                                    {% for plano in planos %}
+                                        <td class="text-center">
+                                            {% if plano.filtros_avancados %}
+                                                <i class="bi bi-check text-success"></i>
+                                            {% else %}
+                                                <i class="bi bi-x text-danger"></i>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                                <tr>
+                                    <td>Ver quem curtiu</td>
+                                    <td class="text-center"><i class="bi bi-x text-danger"></i></td>
+                                    {% for plano in planos %}
+                                        <td class="text-center">
+                                            {% if plano.ver_quem_curtiu %}
+                                                <i class="bi bi-check text-success"></i>
+                                            {% else %}
+                                                <i class="bi bi-x text-danger"></i>
+                                            {% endif %}
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- FAQ -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-question-circle me-2"></i>Perguntas Frequentes
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Como funciona o cancelamento?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Você pode cancelar sua assinatura a qualquer momento. O acesso aos recursos VIP será mantido até o final do período pago.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Quais formas de pagamento são aceitas?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Aceitamos PIX, cartão de crédito, cartão de débito e boleto bancário.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Posso alterar meu plano a qualquer momento?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Sim! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento. O valor será ajustado proporcionalmente.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

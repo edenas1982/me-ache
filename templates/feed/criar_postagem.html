@@ -1,0 +1,257 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Criar Postagem - Me Ache{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>Criar Nova Postagem
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="postForm">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.conteudo.id_for_label }}" class="form-label">
+                                <i class="bi bi-chat-text me-1"></i>O que você está pensando?
+                            </label>
+                            {{ form.conteudo }}
+                            {% if form.conteudo.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.conteudo.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.tipo.id_for_label }}" class="form-label">
+                                        <i class="bi bi-tag me-1"></i>Tipo de Postagem
+                                    </label>
+                                    {{ form.tipo }}
+                                    {% if form.tipo.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.tipo.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.localizacao.id_for_label }}" class="form-label">
+                                        <i class="bi bi-geo-alt me-1"></i>Localização (opcional)
+                                    </label>
+                                    {{ form.localizacao }}
+                                    {% if form.localizacao.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {% for error in form.localizacao.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Upload de Imagem -->
+                        <div class="mb-3" id="imagemSection" style="display: none;">
+                            <label for="{{ form.imagem.id_for_label }}" class="form-label">
+                                <i class="bi bi-image me-1"></i>Imagem
+                            </label>
+                            {{ form.imagem }}
+                            {% if form.imagem.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.imagem.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Preview da imagem -->
+                            <div id="imagePreview" class="mt-3" style="display: none;">
+                                <img id="previewImg" src="" alt="Preview" class="img-fluid rounded" style="max-height: 300px;">
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="removerImagem()">
+                                    <i class="bi bi-trash me-1"></i>Remover Imagem
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Upload de Vídeo -->
+                        <div class="mb-3" id="videoSection" style="display: none;">
+                            <label for="{{ form.video.id_for_label }}" class="form-label">
+                                <i class="bi bi-camera-video me-1"></i>Vídeo
+                            </label>
+                            {{ form.video }}
+                            {% if form.video.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.video.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Preview do vídeo -->
+                            <div id="videoPreview" class="mt-3" style="display: none;">
+                                <video id="previewVideo" controls class="img-fluid rounded" style="max-height: 300px;">
+                                    <source src="" type="video/mp4">
+                                    Seu navegador não suporta vídeos.
+                                </video>
+                                <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="removerVideo()">
+                                    <i class="bi bi-trash me-1"></i>Remover Vídeo
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Botão de Localização -->
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="obterLocalizacao()">
+                                <i class="bi bi-geo-alt me-1"></i>Usar Minha Localização
+                            </button>
+                            <small class="text-muted ms-2">Permite que outros vejam onde você está</small>
+                        </div>
+                        
+                        <!-- Configurações de Privacidade -->
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-shield me-1"></i>Configurações de Privacidade
+                                </h6>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="permitirComentarios" checked>
+                                    <label class="form-check-label" for="permitirComentarios">
+                                        Permitir comentários
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="permitirCompartilhamento" checked>
+                                    <label class="form-check-label" for="permitirCompartilhamento">
+                                        Permitir compartilhamento
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="apenasAmigos">
+                                    <label class="form-check-label" for="apenasAmigos">
+                                        Apenas para meus matches
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'feed:home' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send me-1"></i>Publicar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('id_tipo');
+    const imagemSection = document.getElementById('imagemSection');
+    const videoSection = document.getElementById('videoSection');
+    const imagemInput = document.getElementById('id_imagem');
+    const videoInput = document.getElementById('id_video');
+    
+    // Mostrar/ocultar seções baseado no tipo
+    tipoSelect.addEventListener('change', function() {
+        const tipo = this.value;
+        
+        // Ocultar todas as seções
+        imagemSection.style.display = 'none';
+        videoSection.style.display = 'none';
+        
+        // Mostrar seção apropriada
+        if (tipo === 'imagem') {
+            imagemSection.style.display = 'block';
+        } else if (tipo === 'video') {
+            videoSection.style.display = 'block';
+        }
+    });
+    
+    // Preview de imagem
+    imagemInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Preview de vídeo
+    videoInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const url = URL.createObjectURL(file);
+            document.getElementById('previewVideo').src = url;
+            document.getElementById('videoPreview').style.display = 'block';
+        }
+    });
+});
+
+function removerImagem() {
+    document.getElementById('id_imagem').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.getElementById('previewImg').src = '';
+}
+
+function removerVideo() {
+    document.getElementById('id_video').value = '';
+    document.getElementById('videoPreview').style.display = 'none';
+    document.getElementById('previewVideo').src = '';
+}
+
+function obterLocalizacao() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                // Usar API de geocodificação reversa para obter endereço
+                fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=pt`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const localizacao = `${data.city}, ${data.principalSubdivision}`;
+                        document.getElementById('id_localizacao').value = localizacao;
+                        showAlert('Localização obtida com sucesso!', 'success');
+                    })
+                    .catch(error => {
+                        console.error('Erro ao obter endereço:', error);
+                        showAlert('Erro ao obter endereço', 'danger');
+                    });
+            },
+            function(error) {
+                showAlert('Erro ao obter localização: ' + error.message, 'danger');
+            }
+        );
+    } else {
+        showAlert('Geolocalização não suportada pelo navegador', 'warning');
+    }
+}
+</script>
+{% endblock %}

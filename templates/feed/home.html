@@ -1,0 +1,774 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Início - Me Ache{% endblock %}
+
+{% block content %}
+<!-- Top Menu -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top top-navbar">
+    <div class="container-fluid px-3">
+        <!-- Logo -->
+        <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="{% url 'feed:home' %}">
+            <div class="logo-icon me-2">
+                <i class="bi bi-heart-fill"></i>
+            </div>
+            <span class="logo-text">Me Ache</span>
+        </a>
+        
+        <!-- Top Actions -->
+        <div class="d-flex align-items-center gap-2">
+            <!-- Logout Button (Temporary) -->
+            <a href="{% url 'usuarios:logout' %}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+            
+            <!-- New Post Button -->
+            <button class="btn btn-primary btn-new-post" data-bs-toggle="modal" data-bs-target="#newPostModal">
+                <i class="bi bi-plus-lg"></i>
+                <span class="d-none d-md-inline ms-1">Nova Postagem</span>
+            </button>
+            
+            <!-- Location -->
+            <button class="btn btn-outline-secondary btn-icon" title="Localização">
+                <i class="bi bi-geo-alt"></i>
+            </button>
+            
+            <!-- Notifications -->
+            <button class="btn btn-outline-secondary btn-icon position-relative" title="Notificações">
+                <i class="bi bi-bell"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                    3
+                </span>
+            </button>
+            
+            <!-- User Avatar -->
+            <div class="dropdown">
+                <button class="btn btn-link p-0 user-avatar-btn" data-bs-toggle="dropdown">
+                    <div class="user-avatar-container">
+                        <img src="{% if user.foto_perfil %}{{ user.foto_perfil.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                             alt="Avatar" class="user-avatar">
+                        {% if user.is_vip %}
+                            <div class="vip-badge">
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end user-dropdown">
+                    <li class="dropdown-header">
+                        <div class="d-flex align-items-center">
+                            <img src="{% if user.foto_perfil %}{{ user.foto_perfil.url }}{% else %}{% static 'images/default-avatar.png' %}{% endif %}" 
+                                 alt="Avatar" class="dropdown-avatar me-2">
+                            <div>
+                                <div class="fw-bold">{{ user.nome_completo }}</div>
+                                <small class="text-muted">@{{ user.username }}</small>
+                            </div>
+                        </div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="{% url 'usuarios:perfil' %}"><i class="bi bi-person me-2"></i>Meu Perfil</a></li>
+                    <li><a class="dropdown-item" href="{% url 'usuarios:configuracoes' %}"><i class="bi bi-gear me-2"></i>Configurações</a></li>
+                    <li><a class="dropdown-item" href="{% url 'assinaturas:planos' %}"><i class="bi bi-star me-2"></i>Planos VIP</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="{% url 'usuarios:logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Sair</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Feed Filters -->
+<div class="container-fluid bg-light border-bottom">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-center py-3">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary active" data-filter="following">
+                            <i class="bi bi-people me-1"></i>Seguindo
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" data-filter="recommended">
+                            <i class="bi bi-lightning me-1"></i>Para você
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" data-filter="all">
+                            <i class="bi bi-globe me-1"></i>Todos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Feed -->
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 col-md-8 col-lg-6 mx-auto">
+            <!-- Feed Container -->
+            <div id="feed-container" class="feed-container">
+                <!-- Posts will be loaded here -->
+            </div>
+            
+            <!-- Loading Spinner -->
+            <div id="loading-spinner" class="text-center py-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+            </div>
+            
+            <!-- End of Feed Message -->
+            <div id="end-of-feed" class="text-center py-5" style="display: none;">
+                <i class="bi bi-check-circle text-success display-4"></i>
+                <h5 class="mt-3">Você viu todas as postagens!</h5>
+                <p class="text-muted">Volte mais tarde para ver novas postagens.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Menu -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-lg fixed-bottom bottom-navbar">
+    <div class="container-fluid px-0">
+        <div class="row w-100 mx-0">
+            <div class="col-12 px-0">
+                <div class="d-flex justify-content-around align-items-center bottom-nav">
+                    <!-- Home -->
+                    <a href="{% url 'feed:home' %}" class="nav-item active" data-tooltip="Início">
+                        <div class="nav-icon">
+                            <i class="bi bi-house-fill"></i>
+                        </div>
+                        <span class="nav-label">Início</span>
+                    </a>
+                    
+                    <!-- Search -->
+                    <button class="nav-item" data-tooltip="Buscar">
+                        <div class="nav-icon">
+                            <i class="bi bi-search"></i>
+                        </div>
+                        <span class="nav-label">Buscar</span>
+                    </button>
+                    
+                    <!-- Post -->
+                    <button class="nav-item nav-post" data-bs-toggle="modal" data-bs-target="#newPostModal" data-tooltip="Nova Postagem">
+                        <div class="nav-icon post-icon">
+                            <i class="bi bi-plus-lg"></i>
+                        </div>
+                        <span class="nav-label">Postar</span>
+                    </button>
+                    
+                    <!-- Chat -->
+                    <a href="{% url 'chat:lista' %}" class="nav-item" data-tooltip="Conversas">
+                        <div class="nav-icon position-relative">
+                            <i class="bi bi-chat-dots"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger chat-badge">
+                                2
+                            </span>
+                        </div>
+                        <span class="nav-label">Chat</span>
+                    </a>
+                    
+                    <!-- Profile -->
+                    <a href="{% url 'usuarios:perfil' %}" class="nav-item" data-tooltip="Perfil">
+                        <div class="nav-icon">
+                            <i class="bi bi-person"></i>
+                        </div>
+                        <span class="nav-label">Você</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- New Post Modal -->
+<div class="modal fade" id="newPostModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nova Postagem</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newPostForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <textarea class="form-control" name="conteudo" rows="4" placeholder="O que você está pensando?"></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-image me-1"></i>Foto
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-camera-video me-1"></i>Vídeo
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-geo-alt me-1"></i>Localização
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="publishPost">Publicar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Feed Styles */
+.feed-container {
+    padding-bottom: 100px; /* Space for bottom menu */
+}
+
+.post-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.post-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.post-content {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.post-actions .btn-link {
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.post-actions .btn-link:hover {
+    text-decoration: none;
+}
+
+.like-btn.liked {
+    color: #e91e63 !important;
+}
+
+.comment-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Filter buttons */
+.btn-group .btn.active {
+    background-color: #e91e63;
+    border-color: #e91e63;
+    color: white;
+}
+
+/* Bottom menu */
+.navbar.fixed-bottom {
+    padding: 8px 0;
+}
+
+.navbar.fixed-bottom .btn-link {
+    color: #6c757d;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.navbar.fixed-bottom .btn-link:hover,
+.navbar.fixed-bottom .btn-link.active {
+    color: #e91e63;
+    background-color: rgba(233, 30, 99, 0.1);
+}
+
+.navbar.fixed-bottom .btn-link i {
+    font-size: 20px;
+}
+
+.navbar.fixed-bottom .btn-link small {
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+/* Top menu */
+.navbar.sticky-top {
+    z-index: 1020;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .feed-container {
+        padding: 0 10px 100px 10px;
+    }
+    
+    .post-card {
+        margin-bottom: 15px;
+    }
+    
+    .navbar.fixed-bottom .btn-link {
+        padding: 6px 8px;
+    }
+    
+    .navbar.fixed-bottom .btn-link i {
+        font-size: 18px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentPage = 1;
+    let isLoading = false;
+    let hasMorePosts = true;
+    let currentFilter = 'following';
+    
+    // Initialize feed
+    loadPosts();
+    
+    // Apply random backgrounds to existing posts without media
+    function applyBackgroundsToExistingPosts() {
+        document.querySelectorAll('.post-card').forEach(post => {
+            const hasMedia = post.querySelector('.post-media img, .post-media video');
+            if (!hasMedia && !post.classList.contains('bg-rosa') && !post.classList.contains('bg-azul') && 
+                !post.classList.contains('bg-lilas') && !post.classList.contains('bg-verde') && 
+                !post.classList.contains('bg-amarelo')) {
+                applyRandomBackground(post);
+            }
+        });
+    }
+    
+    // Apply VIP and verified classes to existing posts
+    function applyStatusClassesToExistingPosts() {
+        document.querySelectorAll('.post-card').forEach(post => {
+            const vipIcon = post.querySelector('.vip-indicator');
+            const verifiedIcon = post.querySelector('.verified-icon');
+            
+            if (vipIcon) {
+                post.classList.add('vip');
+            }
+            if (verifiedIcon) {
+                post.classList.add('verified');
+            }
+        });
+    }
+    
+    // Apply backgrounds and status classes after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        applyBackgroundsToExistingPosts();
+        applyStatusClassesToExistingPosts();
+    }, 100);
+    
+    // VIP Effects with Intersection Observer
+    function initializeVIPEffects() {
+        console.log('Inicializando efeitos VIP...');
+        
+        // Initialize global tracking
+        if (!window.animatedVIPCards) {
+            window.animatedVIPCards = new Set();
+        }
+        
+        // Detecta a entrada de cards VIP na viewport
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && entry.target.classList.contains('vip')) {
+                    const cardId = entry.target.getAttribute('data-post-id');
+                    
+                    // Only animate if not already animated
+                    if (!window.animatedVIPCards.has(cardId)) {
+                        entry.target.classList.add('vip-in-view');
+                        window.animatedVIPCards.add(cardId);
+                        console.log('VIP card entrou na viewport - zoom aplicado');
+                        
+                                    // Keep VIP indicator visible permanently
+                                    // No need to remove vip-in-view class as indicator is now permanent
+                    }
+                }
+            });
+        }, { 
+            threshold: 0.3,
+            rootMargin: '0px 0px -100px 0px'
+        });
+
+        // Observa todos os cards VIP
+        const vipCards = document.querySelectorAll('.post-card.vip');
+        console.log('Cards VIP encontrados:', vipCards.length);
+        
+        vipCards.forEach((card, index) => {
+            // Add unique ID to each card
+            if (!card.getAttribute('data-post-id')) {
+                card.setAttribute('data-post-id', `vip-${index}`);
+            }
+            observer.observe(card);
+        });
+    }
+    
+    // Initialize VIP effects
+    setTimeout(initializeVIPEffects, 1000);
+    
+    // Filter buttons
+    document.querySelectorAll('[data-filter]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Update active state
+            document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Reset feed
+            currentFilter = this.dataset.filter;
+            currentPage = 1;
+            hasMorePosts = true;
+            document.getElementById('feed-container').innerHTML = '';
+            document.getElementById('end-of-feed').style.display = 'none';
+            
+            // Load posts
+            loadPosts();
+        });
+    });
+    
+    // Infinite scroll
+    window.addEventListener('scroll', function() {
+        if (isLoading || !hasMorePosts) return;
+        
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        
+        if (scrollTop + windowHeight >= documentHeight - 100) {
+            loadPosts();
+        }
+    });
+    
+    // Load posts function
+    function loadPosts() {
+        if (isLoading || !hasMorePosts) return;
+        
+        isLoading = true;
+        document.getElementById('loading-spinner').style.display = 'block';
+        
+        // Simulate API call - replace with actual AJAX call
+        setTimeout(() => {
+            const posts = generateMockPosts(currentPage);
+            
+            if (posts.length === 0) {
+                hasMorePosts = false;
+                document.getElementById('end-of-feed').style.display = 'block';
+            } else {
+                posts.forEach(post => {
+                    const postElement = createPostElement(post);
+                    document.getElementById('feed-container').appendChild(postElement);
+                });
+                currentPage++;
+            }
+            
+            isLoading = false;
+            document.getElementById('loading-spinner').style.display = 'none';
+        }, 1000);
+    }
+    
+    // Generate mock posts (replace with actual data)
+    function generateMockPosts(page) {
+        if (page > 3) return []; // Simulate end of feed
+        
+        const mockPosts = [
+            {
+                id: page * 10 + 1,
+                author: 'Ana Silva',
+                authorId: 1,
+                authorUsername: 'ana_silva',
+                authorAvatar: 'https://i.pravatar.cc/150?img=' + (page * 10 + 1),
+                isVip: true,
+                isVerified: true,
+                gender: 'Mulher',
+                location: 'São Paulo/SP',
+                content: 'Acabei de chegar de uma viagem incrível! 🌍✨',
+                image: 'https://picsum.photos/400/300?random=' + (page * 10 + 1),
+                likes: Math.floor(Math.random() * 50) + 10,
+                comments: Math.floor(Math.random() * 20) + 5,
+                timeAgo: '2h'
+            },
+            {
+                id: page * 10 + 2,
+                author: 'Bruno Santos',
+                authorId: 2,
+                authorUsername: 'bruno_santos',
+                authorAvatar: 'https://i.pravatar.cc/150?img=' + (page * 10 + 2),
+                isVip: false,
+                isVerified: false,
+                gender: 'Homem',
+                location: 'Rio de Janeiro/RJ',
+                content: 'Que dia lindo para um passeio no parque! ☀️',
+                image: 'https://picsum.photos/400/300?random=' + (page * 10 + 2),
+                likes: Math.floor(Math.random() * 30) + 5,
+                comments: Math.floor(Math.random() * 15) + 2,
+                timeAgo: '4h'
+            },
+            {
+                id: page * 10 + 3,
+                author: 'Carla Oliveira',
+                authorId: 3,
+                authorUsername: 'carla_oliveira',
+                authorAvatar: 'https://i.pravatar.cc/150?img=' + (page * 10 + 3),
+                isVip: true,
+                isVerified: true,
+                gender: 'Mulher',
+                location: 'Belo Horizonte/MG',
+                content: 'Experimentei um restaurante novo hoje, estava delicioso! 🍽️',
+                image: null,
+                likes: Math.floor(Math.random() * 25) + 8,
+                comments: Math.floor(Math.random() * 12) + 3,
+                timeAgo: '6h'
+            },
+            {
+                id: page * 10 + 4,
+                author: 'Diego Santos',
+                authorId: 4,
+                authorUsername: 'diego_santos',
+                authorAvatar: 'https://i.pravatar.cc/150?img=' + (page * 10 + 4),
+                isVip: false,
+                isVerified: false,
+                gender: 'Homem',
+                location: 'Salvador/BA',
+                content: 'Que dia incrível para refletir sobre a vida! 🌅✨',
+                image: null,
+                likes: Math.floor(Math.random() * 30) + 5,
+                comments: Math.floor(Math.random() * 15) + 2,
+                timeAgo: '8h'
+            },
+            {
+                id: page * 10 + 5,
+                author: 'Elena Ferreira',
+                authorId: 5,
+                authorUsername: 'elena_ferreira',
+                authorAvatar: 'https://i.pravatar.cc/150?img=' + (page * 10 + 5),
+                isVip: true,
+                isVerified: true,
+                gender: 'Mulher',
+                location: 'Fortaleza/CE',
+                content: 'Aprendendo algo novo todos os dias! 📚💡',
+                image: null,
+                likes: Math.floor(Math.random() * 35) + 10,
+                comments: Math.floor(Math.random() * 18) + 4,
+                timeAgo: '10h'
+            }
+        ];
+        
+        return mockPosts;
+    }
+    
+    // Apply random background to text posts
+    function applyRandomBackground(postElement) {
+        // Lista de classes de fundo possíveis (cores suaves compatíveis com o layout do Me Ache)
+        const backgrounds = [
+            'bg-rosa',
+            'bg-azul',
+            'bg-lilas',
+            'bg-verde',
+            'bg-amarelo'
+        ];
+
+        // Escolhe uma cor aleatória da lista
+        const randomClass = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+
+        // Adiciona a classe escolhida ao post
+        postElement.classList.add(randomClass);
+    }
+
+    // Create post element
+    function createPostElement(post) {
+        const postDiv = document.createElement('div');
+        postDiv.className = 'post-card';
+        postDiv.setAttribute('data-post-id', post.id);
+        
+        // Add VIP and verified classes
+        if (post.isVip) {
+            postDiv.classList.add('vip');
+        }
+        if (post.isVerified) {
+            postDiv.classList.add('verified');
+        }
+        postDiv.innerHTML = `
+            <div class="card-body p-4">
+                <!-- Post Header -->
+                <div class="post-header">
+                    <div class="avatar-container">
+                        <img src="${post.authorAvatar}" alt="Avatar" class="avatar profile-avatar-clickable" data-user-id="${post.authorId}" data-username="${post.authorUsername}">
+                        ${post.isVip ? '<div class="vip-indicator"><i class="bi bi-star-fill"></i></div>' : ''}
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">
+                            ${post.author}
+                            ${post.isVerified ? '<i class="bi bi-patch-check-fill verified-icon" title="Verificado"></i>' : ''}
+                        </div>
+                        <div class="user-meta">${post.gender} · ${post.location}</div>
+                        <div class="post-time">${post.timeAgo}</div>
+                    </div>
+                    <div class="post-options">
+                        <button class="btn btn-link text-muted" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots"></i>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-flag me-2"></i>Denunciar</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-bookmark me-2"></i>Salvar</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Post Content -->
+                <div class="post-content mb-3">
+                    <p class="mb-0">${post.content}</p>
+                </div>
+
+                <!-- Post Media -->
+                ${post.image ? `
+                    <div class="post-media mb-3">
+                        <img src="${post.image}" alt="Post image" class="img-fluid rounded">
+                    </div>
+                ` : ''}
+
+                <!-- Post Actions -->
+                <div class="post-actions">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex gap-3">
+                            <button class="btn btn-link text-muted p-0 like-btn" data-post-id="${post.id}">
+                                <i class="bi bi-heart me-1"></i>
+                                <span class="like-count">${post.likes}</span>
+                            </button>
+                            <button class="btn btn-link text-muted p-0 comment-btn" data-post-id="${post.id}">
+                                <i class="bi bi-chat me-1"></i>
+                                <span class="comment-count">${post.comments}</span>
+                            </button>
+                            <button class="btn btn-link text-muted p-0">
+                                <i class="bi bi-eye me-1"></i>Ver curtidas
+                            </button>
+                        </div>
+                        <button class="btn btn-link text-muted p-0">
+                            <i class="bi bi-bookmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Apply random background if no image
+        if (!post.image) {
+            applyRandomBackground(postDiv);
+        }
+        
+        // Reinitialize VIP effects for new posts
+        setTimeout(() => {
+            if (postDiv.classList.contains('vip')) {
+                // Add to the main observer
+                const vipCards = document.querySelectorAll('.post-card.vip');
+                const observer = new IntersectionObserver(entries => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting && entry.target.classList.contains('vip')) {
+                            const cardId = entry.target.getAttribute('data-post-id');
+                            if (!window.animatedVIPCards) {
+                                window.animatedVIPCards = new Set();
+                            }
+                            
+                            if (!window.animatedVIPCards.has(cardId)) {
+                                entry.target.classList.add('vip-in-view');
+                                window.animatedVIPCards.add(cardId);
+                                
+                                // Keep VIP indicator visible permanently
+                                // No need to remove vip-in-view class as indicator is now permanent
+                            }
+                        }
+                    });
+                }, { 
+                    threshold: 0.3,
+                    rootMargin: '0px 0px -100px 0px'
+                });
+                observer.observe(postDiv);
+            }
+        }, 100);
+        
+        // Add click listener to profile avatar
+        const avatar = postDiv.querySelector('.profile-avatar-clickable');
+        if (avatar) {
+            avatar.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const userId = this.getAttribute('data-user-id');
+                const username = this.getAttribute('data-username');
+                
+                if (userId && username) {
+                    // Check if it's the current user's own profile
+                    const currentUserId = {{ user.id|default:'null' }};
+                    
+                    if (currentUserId && parseInt(userId) === parseInt(currentUserId)) {
+                        // Redirect to own profile (edit mode)
+                        window.location.href = '{% url "usuarios:perfil" %}';
+                    } else {
+                        // Redirect to visitor profile view
+                        window.location.href = `/usuarios/perfil/${username}/`;
+                    }
+                }
+            });
+            
+            // Add hover effect
+            avatar.style.cursor = 'pointer';
+            avatar.style.transition = 'transform 0.2s ease';
+            
+            avatar.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.1)';
+            });
+            
+            avatar.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        }
+        
+        return postDiv;
+    }
+    
+    // Like button functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.like-btn')) {
+            const btn = e.target.closest('.like-btn');
+            const icon = btn.querySelector('i');
+            const count = btn.querySelector('.like-count');
+            
+            if (btn.classList.contains('liked')) {
+                btn.classList.remove('liked');
+                icon.className = 'bi bi-heart me-1';
+                count.textContent = parseInt(count.textContent) - 1;
+            } else {
+                btn.classList.add('liked');
+                icon.className = 'bi bi-heart-fill me-1';
+                count.textContent = parseInt(count.textContent) + 1;
+            }
+        }
+    });
+    
+    // New post functionality
+    document.getElementById('publishPost').addEventListener('click', function() {
+        const content = document.querySelector('#newPostForm textarea').value;
+        if (content.trim()) {
+            // Here you would send the post to the server
+            console.log('New post:', content);
+            // Reset form and close modal
+            document.querySelector('#newPostForm textarea').value = '';
+            bootstrap.Modal.getInstance(document.getElementById('newPostModal')).hide();
+            // Reload feed
+            currentPage = 1;
+            hasMorePosts = true;
+            document.getElementById('feed-container').innerHTML = '';
+            document.getElementById('end-of-feed').style.display = 'none';
+            loadPosts();
+        }
+    });
+});
+</script>
+{% endblock %}

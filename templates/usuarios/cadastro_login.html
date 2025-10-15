@@ -1,0 +1,436 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Criar Conta - Me Ache{% endblock %}
+
+{% block extra_head %}
+<style>
+    .cadastro-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .cadastro-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        padding: 40px;
+        max-width: 500px;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .cadastro-header {
+        margin-bottom: 30px;
+    }
+    
+    .cadastro-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+    }
+    
+    .cadastro-subtitle {
+        color: #666;
+        font-size: 16px;
+        line-height: 1.5;
+    }
+    
+    .login-options {
+        margin-bottom: 30px;
+    }
+    
+    .login-option {
+        margin-bottom: 20px;
+    }
+    
+    .btn-login-option {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        background: #fff;
+        color: #333;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .btn-login-option:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-google {
+        border-color: #db4437;
+        color: #db4437;
+    }
+    
+    .btn-google:hover {
+        border-color: #db4437;
+        background: #fef7f7;
+    }
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 30px 0;
+        color: #666;
+        font-size: 14px;
+    }
+    
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e9ecef;
+    }
+    
+    .divider span {
+        padding: 0 20px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 15px 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        background: #fff;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn-continuar {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        color: white;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+    
+    .btn-continuar:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-continuar:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .progress-bar {
+        width: 100%;
+        height: 4px;
+        background: #e9ecef;
+        border-radius: 2px;
+        margin-bottom: 30px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        width: 71.43%;
+        transition: width 0.3s ease;
+    }
+    
+    .step-indicator {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 20px;
+    }
+    
+    .email-form {
+        display: none;
+    }
+    
+    .email-form.active {
+        display: block;
+    }
+    
+    .password-strength {
+        margin-top: 10px;
+        font-size: 14px;
+    }
+    
+    .strength-weak { color: #dc3545; }
+    .strength-medium { color: #ffc107; }
+    .strength-strong { color: #28a745; }
+    
+    .password-requirements {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+        text-align: left;
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .password-requirements ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .password-requirements li {
+        margin-bottom: 5px;
+    }
+    
+    .requirement-met {
+        color: #28a745;
+    }
+    
+    .requirement-unmet {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cadastro-container">
+    <div class="cadastro-card">
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            Etapa 5 de 7
+        </div>
+        
+        <!-- Header -->
+        <div class="cadastro-header">
+            <h1 class="cadastro-title">Criar sua conta</h1>
+            <p class="cadastro-subtitle">
+                Escolha como você quer fazer login no Me Ache
+            </p>
+        </div>
+        
+        <!-- Login Options -->
+        <div class="login-options">
+            <!-- Google Login -->
+            <div class="login-option">
+                <button type="button" class="btn-login-option btn-google" id="btnGoogle">
+                    <i class="bi bi-google"></i>
+                    Continuar com Google
+                </button>
+            </div>
+            
+            <div class="divider">
+                <span>ou</span>
+            </div>
+            
+            <!-- Email Form -->
+            <form method="post" id="emailForm" class="email-form">
+                {% csrf_token %}
+                <input type="hidden" name="tipo_login" value="email">
+                
+                <div class="form-group">
+                    <label for="email" class="form-label">E-mail</label>
+                    <input type="email" 
+                           id="email" 
+                           name="email" 
+                           class="form-control" 
+                           placeholder="Digite seu e-mail"
+                           required
+                           autocomplete="email">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Senha</label>
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           class="form-control" 
+                           placeholder="Crie uma senha segura"
+                           required
+                           autocomplete="new-password">
+                    <div class="password-strength" id="passwordStrength"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password2" class="form-label">Confirmar senha</label>
+                    <input type="password" 
+                           id="password2" 
+                           name="password2" 
+                           class="form-control" 
+                           placeholder="Digite a senha novamente"
+                           required
+                           autocomplete="new-password">
+                </div>
+                
+                <!-- Password Requirements -->
+                <div class="password-requirements">
+                    <strong>Requisitos da senha:</strong>
+                    <ul>
+                        <li id="req-length" class="requirement-unmet">Mínimo de 8 caracteres</li>
+                        <li id="req-uppercase" class="requirement-unmet">Pelo menos 1 letra maiúscula</li>
+                        <li id="req-lowercase" class="requirement-unmet">Pelo menos 1 letra minúscula</li>
+                        <li id="req-number" class="requirement-unmet">Pelo menos 1 número</li>
+                        <li id="req-match" class="requirement-unmet">Senhas coincidem</li>
+                    </ul>
+                </div>
+                
+                <button type="submit" class="btn-continuar" id="btnContinuar" disabled>
+                    Criar conta e continuar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnGoogle = document.getElementById('btnGoogle');
+    const emailForm = document.getElementById('emailForm');
+    const btnContinuar = document.getElementById('btnContinuar');
+    const passwordInput = document.getElementById('password');
+    const password2Input = document.getElementById('password2');
+    const emailInput = document.getElementById('email');
+    
+    let requirements = {
+        length: false,
+        uppercase: false,
+        lowercase: false,
+        number: false,
+        match: false
+    };
+    
+    // Mostrar formulário de email quando clicar em "ou"
+    btnGoogle.addEventListener('click', function() {
+        // Simular clique no Google (integração futura)
+        alert('Integração com Google será implementada em breve. Use o formulário de e-mail.');
+    });
+    
+    // Mostrar formulário de email
+    document.querySelector('.divider').addEventListener('click', function() {
+        emailForm.classList.add('active');
+    });
+    
+    function checkPasswordStrength(password) {
+        const strength = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /\d/.test(password)
+        };
+        
+        return strength;
+    }
+    
+    function updatePasswordRequirements() {
+        const password = passwordInput.value;
+        const password2 = password2Input.value;
+        const strength = checkPasswordStrength(password);
+        
+        // Atualizar indicadores visuais
+        document.getElementById('req-length').className = strength.length ? 'requirement-met' : 'requirement-unmet';
+        document.getElementById('req-uppercase').className = strength.uppercase ? 'requirement-met' : 'requirement-unmet';
+        document.getElementById('req-lowercase').className = strength.lowercase ? 'requirement-met' : 'requirement-unmet';
+        document.getElementById('req-number').className = strength.number ? 'requirement-met' : 'requirement-unmet';
+        document.getElementById('req-match').className = (password === password2 && password.length > 0) ? 'requirement-met' : 'requirement-unmet';
+        
+        // Atualizar força da senha
+        const strengthElement = document.getElementById('passwordStrength');
+        const strengthCount = Object.values(strength).filter(Boolean).length;
+        
+        if (strengthCount < 2) {
+            strengthElement.textContent = 'Senha fraca';
+            strengthElement.className = 'password-strength strength-weak';
+        } else if (strengthCount < 4) {
+            strengthElement.textContent = 'Senha média';
+            strengthElement.className = 'password-strength strength-medium';
+        } else {
+            strengthElement.textContent = 'Senha forte';
+            strengthElement.className = 'password-strength strength-strong';
+        }
+        
+        // Atualizar requirements
+        requirements = {
+            ...strength,
+            match: password === password2 && password.length > 0
+        };
+        
+        updateContinuarButton();
+    }
+    
+    function updateContinuarButton() {
+        const email = emailInput.value.trim();
+        const allRequirementsMet = Object.values(requirements).every(Boolean);
+        btnContinuar.disabled = !(email && allRequirementsMet);
+    }
+    
+    // Event listeners
+    passwordInput.addEventListener('input', updatePasswordRequirements);
+    password2Input.addEventListener('input', updatePasswordRequirements);
+    emailInput.addEventListener('input', updateContinuarButton);
+    
+    // Validação do formulário
+    emailForm.addEventListener('submit', function(e) {
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const password2 = password2Input.value;
+        
+        if (!email) {
+            e.preventDefault();
+            alert('Por favor, digite seu e-mail.');
+            emailInput.focus();
+            return;
+        }
+        
+        if (!Object.values(requirements).every(Boolean)) {
+            e.preventDefault();
+            alert('Por favor, atenda a todos os requisitos da senha.');
+            passwordInput.focus();
+            return;
+        }
+        
+        if (password !== password2) {
+            e.preventDefault();
+            alert('As senhas não coincidem.');
+            password2Input.focus();
+            return;
+        }
+    });
+});
+</script>
+{% endblock %}
