@@ -32,6 +32,60 @@
         color: #718096;
         font-weight: 500;
     }
+    
+    .perfil-options {
+        margin-bottom: 30px;
+    }
+    
+    .separator {
+        text-align: center;
+        margin: 20px 0 15px 0;
+        padding: 10px 0;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .separator span {
+        background: #f7fafc;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #4a5568;
+        letter-spacing: 0.5px;
+    }
+    
+    .perfil-option {
+        margin-bottom: 12px;
+    }
+    
+    .perfil-option input[type="radio"] {
+        display: none;
+    }
+    
+    .perfil-option label {
+        display: block;
+        padding: 15px 20px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        text-align: center;
+    }
+    
+    .perfil-option input[type="radio"]:checked + label {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .perfil-option label:hover {
+        border-color: #667eea;
+        transform: translateY(-1px);
+    }
 </style>
 {% endblock %}
 
@@ -50,19 +104,28 @@
         <div class="cadastro-header">
             <h1 class="cadastro-title">Como você se identifica?</h1>
             <p class="cadastro-subtitle">
-                Selecione sua identidade de gênero para personalizar sua experiência
+                Selecione a opção que melhor representa você ou seu casal
             </p>
         </div>
         
         <!-- Form -->
-        <form method="post" id="genderForm">
+        <form method="post" id="perfilForm">
             {% csrf_token %}
-            <div class="gender-options">
-                {% for value, label in genero_choices %}
-                <div class="gender-option">
-                    <input type="radio" id="genero_{{ forloop.counter }}" name="genero" value="{{ value }}" required>
-                    <label for="genero_{{ forloop.counter }}">{{ label }}</label>
-                </div>
+            
+            <div class="perfil-options">
+                {% for value, label in perfil_choices %}
+                    {% if value == '' %}
+                        <!-- Separador -->
+                        <div class="separator">
+                            <span>{{ label }}</span>
+                        </div>
+                    {% else %}
+                        <!-- Opção de perfil -->
+                        <div class="perfil-option">
+                            <input type="radio" id="perfil_{{ forloop.counter }}" name="perfil" value="{{ value }}" required>
+                            <label for="perfil_{{ forloop.counter }}">{{ label }}</label>
+                        </div>
+                    {% endif %}
                 {% endfor %}
             </div>
             
@@ -75,29 +138,35 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('genderForm');
+    const form = document.getElementById('perfilForm');
     const btnContinuar = document.getElementById('btnContinuar');
-    const genderInputs = document.querySelectorAll('input[name="genero"]');
+    const perfilInputs = document.querySelectorAll('input[name="perfil"]');
     
     function updateContinuarButton() {
-        const selected = document.querySelector('input[name="genero"]:checked');
-        btnContinuar.disabled = !selected;
+        const perfilSelected = document.querySelector('input[name="perfil"]:checked');
+        btnContinuar.disabled = !perfilSelected;
     }
     
-    // Event listeners
-    genderInputs.forEach(input => {
+    // Event listeners para perfil
+    perfilInputs.forEach(input => {
         input.addEventListener('change', updateContinuarButton);
     });
     
     // Form submission
     form.addEventListener('submit', function(e) {
-        const selected = document.querySelector('input[name="genero"]:checked');
-        if (!selected) {
+        const perfilSelected = document.querySelector('input[name="perfil"]:checked');
+        
+        if (!perfilSelected) {
             e.preventDefault();
+            alert('Por favor, selecione uma opção de perfil.');
             return;
         }
-        console.log('Gênero selecionado:', selected.value);
+        
+        console.log('Perfil selecionado:', perfilSelected.value);
     });
+    
+    // Inicializar estado
+    updateContinuarButton();
 });
 </script>
 {% endblock %}

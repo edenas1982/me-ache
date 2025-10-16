@@ -214,11 +214,27 @@
         margin-bottom: 5px;
     }
     
+    .requirement-icon {
+        display: inline-block;
+        width: 20px;
+        text-align: center;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+    
     .requirement-met {
         color: #28a745;
     }
     
+    .requirement-met .requirement-icon {
+        color: #28a745;
+    }
+    
     .requirement-unmet {
+        color: #dc3545;
+    }
+    
+    .requirement-unmet .requirement-icon {
         color: #dc3545;
     }
 </style>
@@ -302,11 +318,26 @@
                 <div class="password-requirements">
                     <strong>Requisitos da senha:</strong>
                     <ul>
-                        <li id="req-length" class="requirement-unmet">Mínimo de 8 caracteres</li>
-                        <li id="req-uppercase" class="requirement-unmet">Pelo menos 1 letra maiúscula</li>
-                        <li id="req-lowercase" class="requirement-unmet">Pelo menos 1 letra minúscula</li>
-                        <li id="req-number" class="requirement-unmet">Pelo menos 1 número</li>
-                        <li id="req-match" class="requirement-unmet">Senhas coincidem</li>
+                        <li id="req-length" class="requirement-unmet">
+                            <span class="requirement-icon">✗</span>
+                            Mínimo de 8 caracteres
+                        </li>
+                        <li id="req-uppercase" class="requirement-unmet">
+                            <span class="requirement-icon">✗</span>
+                            Pelo menos 1 letra maiúscula
+                        </li>
+                        <li id="req-lowercase" class="requirement-unmet">
+                            <span class="requirement-icon">✗</span>
+                            Pelo menos 1 letra minúscula
+                        </li>
+                        <li id="req-number" class="requirement-unmet">
+                            <span class="requirement-icon">✗</span>
+                            Pelo menos 1 número
+                        </li>
+                        <li id="req-match" class="requirement-unmet">
+                            <span class="requirement-icon">✗</span>
+                            Senhas coincidem
+                        </li>
                     </ul>
                 </div>
                 
@@ -335,13 +366,18 @@ document.addEventListener('DOMContentLoaded', function() {
         match: false
     };
     
+    console.log('Initial requirements:', requirements);
+    
     // Mostrar formulário de email quando clicar em "ou"
     btnGoogle.addEventListener('click', function() {
         // Simular clique no Google (integração futura)
         alert('Integração com Google será implementada em breve. Use o formulário de e-mail.');
     });
     
-    // Mostrar formulário de email
+    // Mostrar formulário de email automaticamente
+    emailForm.classList.add('active');
+    
+    // Mostrar formulário de email quando clicar em "ou" (opcional)
     document.querySelector('.divider').addEventListener('click', function() {
         emailForm.classList.add('active');
     });
@@ -362,12 +398,31 @@ document.addEventListener('DOMContentLoaded', function() {
         const password2 = password2Input.value;
         const strength = checkPasswordStrength(password);
         
+        console.log('Password update:', { password, password2, strength });
+        
         // Atualizar indicadores visuais
-        document.getElementById('req-length').className = strength.length ? 'requirement-met' : 'requirement-unmet';
-        document.getElementById('req-uppercase').className = strength.uppercase ? 'requirement-met' : 'requirement-unmet';
-        document.getElementById('req-lowercase').className = strength.lowercase ? 'requirement-met' : 'requirement-unmet';
-        document.getElementById('req-number').className = strength.number ? 'requirement-met' : 'requirement-unmet';
-        document.getElementById('req-match').className = (password === password2 && password.length > 0) ? 'requirement-met' : 'requirement-unmet';
+        const reqLength = document.getElementById('req-length');
+        const reqUppercase = document.getElementById('req-uppercase');
+        const reqLowercase = document.getElementById('req-lowercase');
+        const reqNumber = document.getElementById('req-number');
+        const reqMatch = document.getElementById('req-match');
+        
+        // Atualizar classes e ícones
+        reqLength.className = strength.length ? 'requirement-met' : 'requirement-unmet';
+        reqLength.querySelector('.requirement-icon').textContent = strength.length ? '✓' : '✗';
+        
+        reqUppercase.className = strength.uppercase ? 'requirement-met' : 'requirement-unmet';
+        reqUppercase.querySelector('.requirement-icon').textContent = strength.uppercase ? '✓' : '✗';
+        
+        reqLowercase.className = strength.lowercase ? 'requirement-met' : 'requirement-unmet';
+        reqLowercase.querySelector('.requirement-icon').textContent = strength.lowercase ? '✓' : '✗';
+        
+        reqNumber.className = strength.number ? 'requirement-met' : 'requirement-unmet';
+        reqNumber.querySelector('.requirement-icon').textContent = strength.number ? '✓' : '✗';
+        
+        const passwordsMatch = (password === password2 && password.length > 0);
+        reqMatch.className = passwordsMatch ? 'requirement-met' : 'requirement-unmet';
+        reqMatch.querySelector('.requirement-icon').textContent = passwordsMatch ? '✓' : '✗';
         
         // Atualizar força da senha
         const strengthElement = document.getElementById('passwordStrength');
@@ -386,17 +441,41 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Atualizar requirements
         requirements = {
-            ...strength,
-            match: password === password2 && password.length > 0
+            length: strength.length,
+            uppercase: strength.uppercase,
+            lowercase: strength.lowercase,
+            number: strength.number,
+            match: passwordsMatch
         };
         
+        console.log('Requirements updated:', requirements);
         updateContinuarButton();
     }
     
     function updateContinuarButton() {
         const email = emailInput.value.trim();
-        const allRequirementsMet = Object.values(requirements).every(Boolean);
-        btnContinuar.disabled = !(email && allRequirementsMet);
+        const emailValid = email && email.includes('@') && email.includes('.');
+        const allRequirementsMet = Object.values(requirements).every(req => req === true);
+        const shouldEnable = emailValid && allRequirementsMet;
+        
+        console.log('Update button:', { 
+            email, 
+            emailValid, 
+            allRequirementsMet, 
+            shouldEnable,
+            requirements: requirements
+        });
+        
+        btnContinuar.disabled = !shouldEnable;
+        
+        // Adicionar feedback visual no botão
+        if (shouldEnable) {
+            btnContinuar.style.opacity = '1';
+            btnContinuar.style.cursor = 'pointer';
+        } else {
+            btnContinuar.style.opacity = '0.5';
+            btnContinuar.style.cursor = 'not-allowed';
+        }
     }
     
     // Event listeners
@@ -404,11 +483,20 @@ document.addEventListener('DOMContentLoaded', function() {
     password2Input.addEventListener('input', updatePasswordRequirements);
     emailInput.addEventListener('input', updateContinuarButton);
     
+    // Inicializar validação
+    updatePasswordRequirements();
+    updateContinuarButton();
+    
     // Validação do formulário
     emailForm.addEventListener('submit', function(e) {
         const email = emailInput.value.trim();
         const password = passwordInput.value;
         const password2 = password2Input.value;
+        
+        console.log('Form submit - Email:', email);
+        console.log('Form submit - Password:', password);
+        console.log('Form submit - Password2:', password2);
+        console.log('Form submit - Requirements:', requirements);
         
         if (!email) {
             e.preventDefault();
@@ -417,7 +505,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        if (!Object.values(requirements).every(Boolean)) {
+        const allRequirementsMet = Object.values(requirements).every(req => req === true);
+        console.log('All requirements met:', allRequirementsMet);
+        
+        if (!allRequirementsMet) {
             e.preventDefault();
             alert('Por favor, atenda a todos os requisitos da senha.');
             passwordInput.focus();
@@ -430,6 +521,12 @@ document.addEventListener('DOMContentLoaded', function() {
             password2Input.focus();
             return;
         }
+        
+        console.log('Form validation passed, submitting...');
+        
+        // Mostrar loading no botão
+        btnContinuar.disabled = true;
+        btnContinuar.innerHTML = 'Criando conta...';
     });
 });
 </script>

@@ -14,7 +14,7 @@ urlpatterns = [
     
     # Perfil
     path('perfil/', views.PerfilDetailView.as_view(), name='perfil'),
-    path('perfil/editar/', views.PerfilUpdateView.as_view(), name='editar_perfil'),
+    path('perfil/editar/', views.editar_perfil, name='editar_perfil'),
     path('configuracoes/', views.configuracoes, name='configuracoes'),
     
     # Upload de foto
@@ -35,4 +35,7 @@ urlpatterns = [
     
     # Perfil visitante
     path('perfil/<str:username>/', views.perfil_visitante, name='perfil_visitante'),
+    
+    # API para cidades
+    path('api/cidades/', views.api_cidades, name='api_cidades'),
 ]

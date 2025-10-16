@@ -190,6 +190,30 @@
     .username-rules li {
         margin-bottom: 5px;
     }
+    
+    .requirement-icon {
+        display: inline-block;
+        width: 20px;
+        text-align: center;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+    
+    .requirement-met {
+        color: #28a745;
+    }
+    
+    .requirement-met .requirement-icon {
+        color: #28a745;
+    }
+    
+    .requirement-unmet {
+        color: #dc3545;
+    }
+    
+    .requirement-unmet .requirement-icon {
+        color: #dc3545;
+    }
 </style>
 {% endblock %}
 
@@ -243,10 +267,22 @@
         <div class="username-rules">
             <h6>Regras para nome de usuário:</h6>
             <ul>
-                <li>Use apenas letras, números e pontos</li>
-                <li>Mínimo de 3 caracteres</li>
-                <li>Máximo de 30 caracteres</li>
-                <li>Deve ser único</li>
+                <li id="rule-chars" class="requirement-unmet">
+                    <span class="requirement-icon">✗</span>
+                    Use apenas letras, números e pontos
+                </li>
+                <li id="rule-length" class="requirement-unmet">
+                    <span class="requirement-icon">✗</span>
+                    Mínimo de 3 caracteres
+                </li>
+                <li id="rule-max" class="requirement-unmet">
+                    <span class="requirement-icon">✗</span>
+                    Máximo de 30 caracteres
+                </li>
+                <li id="rule-unique" class="requirement-unmet">
+                    <span class="requirement-icon">✗</span>
+                    Deve ser único
+                </li>
             </ul>
         </div>
     </div>
@@ -264,6 +300,26 @@ document.addEventListener('DOMContentLoaded', function() {
     let isValid = false;
     
     function validateUsername(username) {
+        // Atualizar indicadores visuais
+        const ruleChars = document.getElementById('rule-chars');
+        const ruleLength = document.getElementById('rule-length');
+        const ruleMax = document.getElementById('rule-max');
+        
+        // Validar caracteres permitidos
+        const validChars = /^[a-zA-Z0-9.]+$/.test(username);
+        ruleChars.className = validChars ? 'requirement-met' : 'requirement-unmet';
+        ruleChars.querySelector('.requirement-icon').textContent = validChars ? '✓' : '✗';
+        
+        // Validar comprimento mínimo
+        const validLength = username.length >= 3;
+        ruleLength.className = validLength ? 'requirement-met' : 'requirement-unmet';
+        ruleLength.querySelector('.requirement-icon').textContent = validLength ? '✓' : '✗';
+        
+        // Validar comprimento máximo
+        const validMax = username.length <= 30;
+        ruleMax.className = validMax ? 'requirement-met' : 'requirement-unmet';
+        ruleMax.querySelector('.requirement-icon').textContent = validMax ? '✓' : '✗';
+        
         // Validação básica no frontend
         if (username.length < 3) {
             return { valid: false, message: 'Mínimo de 3 caracteres' };
@@ -315,12 +371,18 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
+            const ruleUnique = document.getElementById('rule-unique');
+            
             if (data.disponivel) {
                 showValidation('<i class="bi bi-check-circle-fill"></i>', data.message, 'valid');
+                ruleUnique.className = 'requirement-met';
+                ruleUnique.querySelector('.requirement-icon').textContent = '✓';
                 btnContinuar.disabled = false;
                 isValid = true;
             } else {
                 showValidation('<i class="bi bi-x-circle-fill"></i>', data.message, 'invalid');
+                ruleUnique.className = 'requirement-unmet';
+                ruleUnique.querySelector('.requirement-icon').textContent = '✗';
                 btnContinuar.disabled = true;
                 isValid = false;
             }

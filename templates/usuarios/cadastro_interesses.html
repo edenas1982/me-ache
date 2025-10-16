@@ -217,7 +217,30 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Atualizar contador quando checkboxes mudarem
     checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', updateSelectedCount);
+        checkbox.addEventListener('change', function() {
+            console.log('Checkbox changed:', this.value, this.checked);
+            
+            // Se "Todos" foi selecionado, marcar todas as outras opções
+            if (this.value === 'TODOS' && this.checked) {
+                console.log('TODOS selecionado, marcando todos os outros');
+                checkboxes.forEach(cb => {
+                    if (cb !== this) {
+                        cb.checked = true;
+                    }
+                });
+            }
+            // Se "Todos" foi desmarcado, desmarcar todas as outras
+            else if (this.value === 'TODOS' && !this.checked) {
+                console.log('TODOS desmarcado, desmarcando todos os outros');
+                checkboxes.forEach(cb => {
+                    if (cb !== this) {
+                        cb.checked = false;
+                    }
+                });
+            }
+            
+            updateSelectedCount();
+        });
     });
     
     // Animação suave ao selecionar

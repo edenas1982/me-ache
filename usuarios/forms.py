@@ -4,6 +4,12 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from datetime import date
 
+from .models import (
+    Usuario, Interesse, Objetivo, Fetiche, TipoRelacionamento,
+    DadosPessoaisDetalhados, EstiloVida, IdentidadePreferencias, 
+    ConfiguracoesPrivacidade, Signo, CorOlhos, CorCabelos, Cidade
+)
+
 Usuario = get_user_model()
 
 
@@ -199,6 +205,349 @@ class PerfilUpdateForm(forms.ModelForm):
                 raise ValidationError('Idade inválida.')
         
         return data_nascimento
+
+
+# ==============================================
+# FORMS PARA EDIÇÃO DE PERFIL COM ABAS
+# ==============================================
+
+class PerfilGeralForm(forms.ModelForm):
+    """Formulário para aba Geral"""
+    
+    class Meta:
+        model = Usuario
+        fields = (
+            'foto_perfil', 'username', 'tipo_perfil', 
+            'tipo_relacionamento', 'tempo_juntos',
+            'cidade', 'estado', 'cidade_ref'
+        )
+        widgets = {
+            'foto_perfil': forms.FileInput(attrs={
+                'class': 'form-control', 
+                'accept': 'image/*',
+                'id': 'foto-perfil-input'
+            }),
+            'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nome do perfil'
+            }),
+            'tipo_perfil': forms.Select(attrs={
+                'class': 'form-control',
+                'id': 'tipo-perfil-select'
+            }),
+            'tipo_relacionamento': forms.Select(attrs={
+                'class': 'form-control',
+                'id': 'tipo-relacionamento-select'
+            }),
+            'tempo_juntos': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: 2 anos, 6 meses, 1 ano e meio'
+            }),
+            'cidade': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Sua cidade'
+            }),
+            'estado': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'UF',
+                'maxlength': '2'
+            }),
+            'cidade_ref': forms.HiddenInput(),
+        }
+
+
+class PerfilInformacoesForm(forms.ModelForm):
+    """Formulário para aba Informações Pessoais"""
+    
+    class Meta:
+        model = Usuario
+        fields = (
+            'data_nascimento', 'genero', 'profissao', 'estado_civil', 'orientacao_sexual',
+            'first_name_parceiro', 'last_name_parceiro', 'data_nascimento_parceiro',
+            'genero_parceiro', 'profissao_parceiro', 'estado_civil_parceiro', 'orientacao_sexual_parceiro',
+            'foto_perfil_parceiro'
+        )
+        widgets = {
+            # Campos da primeira pessoa
+            'data_nascimento': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'id': 'data-nascimento'
+            }),
+            'genero': forms.Select(attrs={
+                'class': 'form-control',
+                'id': 'genero'
+            }),
+            'profissao': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Sua profissão'
+            }),
+            'estado_civil': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Estado civil'
+            }),
+            'orientacao_sexual': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Orientação sexual'
+            }),
+            
+            # Campos do parceiro
+            'first_name_parceiro': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nome do parceiro',
+                'id': 'nome-parceiro'
+            }),
+            'last_name_parceiro': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Sobrenome do parceiro',
+                'id': 'sobrenome-parceiro'
+            }),
+            'data_nascimento_parceiro': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date',
+                'id': 'data-nascimento-parceiro'
+            }),
+            'genero_parceiro': forms.Select(attrs={
+                'class': 'form-control',
+                'id': 'genero-parceiro'
+            }),
+            'profissao_parceiro': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Profissão do parceiro'
+            }),
+            'estado_civil_parceiro': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Estado civil do parceiro'
+            }),
+            'orientacao_sexual_parceiro': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Orientação sexual do parceiro'
+            }),
+            'foto_perfil_parceiro': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*',
+                'id': 'foto-parceiro-input'
+            }),
+        }
+    
+    def clean_data_nascimento(self):
+        data_nascimento = self.cleaned_data.get('data_nascimento')
+        if data_nascimento:
+            hoje = date.today()
+            idade = hoje.year - data_nascimento.year - ((hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day))
+            
+            if idade < 18:
+                raise ValidationError('Você deve ter pelo menos 18 anos.')
+            
+            if idade > 100:
+                raise ValidationError('Idade inválida.')
+        
+        return data_nascimento
+    
+    def clean_data_nascimento_parceiro(self):
+        data_nascimento = self.cleaned_data.get('data_nascimento_parceiro')
+        if data_nascimento:
+            hoje = date.today()
+            idade = hoje.year - data_nascimento.year - ((hoje.month, hoje.day) < (data_nascimento.month, data_nascimento.day))
+            
+            if idade < 18:
+                raise ValidationError('O parceiro deve ter pelo menos 18 anos.')
+            
+            if idade > 100:
+                raise ValidationError('Idade inválida.')
+        
+        return data_nascimento
+
+
+class DadosPessoaisForm(forms.ModelForm):
+    """Formulário para dados pessoais detalhados"""
+    
+    class Meta:
+        model = DadosPessoaisDetalhados
+        fields = (
+            'nome_apelido', 'data_nascimento', 'signo', 'altura', 'peso',
+            'cor_olhos', 'cor_cabelos', 'profissao_ocupacao', 'cidade_atual', 'origem'
+        )
+        widgets = {
+            'nome_apelido': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nome ou apelido público'
+            }),
+            'data_nascimento': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'signo': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'altura': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: 175',
+                'min': '100',
+                'max': '250'
+            }),
+            'peso': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: 70',
+                'min': '30',
+                'max': '300'
+            }),
+            'cor_olhos': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'cor_cabelos': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'profissao_ocupacao': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Sua profissão ou ocupação'
+            }),
+            'cidade_atual': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'origem': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Popular opções dos campos
+        self.fields['signo'].queryset = Signo.objects.filter(ativo=True).order_by('ordem')
+        self.fields['cor_olhos'].queryset = CorOlhos.objects.filter(ativo=True).order_by('ordem')
+        self.fields['cor_cabelos'].queryset = CorCabelos.objects.filter(ativo=True).order_by('ordem')
+        self.fields['cidade_atual'].queryset = Cidade.objects.filter(ativa=True).order_by('nome')
+        self.fields['origem'].queryset = Cidade.objects.filter(ativa=True).order_by('nome')
+
+
+class EstiloVidaForm(forms.ModelForm):
+    """Formulário para estilo de vida"""
+    
+    class Meta:
+        model = EstiloVida
+        fields = (
+            'fumante', 'bebe', 'pratica_esportes', 'tem_filhos', 'tatuagens_piercings'
+        )
+        widgets = {
+            'fumante': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'bebe': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'pratica_esportes': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'tem_filhos': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'tatuagens_piercings': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+        }
+
+
+class IdentidadePreferenciasForm(forms.ModelForm):
+    """Formulário para identidade e preferências"""
+    
+    class Meta:
+        model = IdentidadePreferencias
+        fields = (
+            'genero', 'orientacao_sexual', 'aberto_contatos_com'
+        )
+        widgets = {
+            'genero': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'orientacao_sexual': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'aberto_contatos_com': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+        }
+
+
+class ConfiguracoesPrivacidadeForm(forms.ModelForm):
+    """Formulário para configurações de privacidade"""
+    
+    class Meta:
+        model = ConfiguracoesPrivacidade
+        fields = (
+            'mostrar_idade', 'mostrar_cidade', 'disponivel_mensagens'
+        )
+        widgets = {
+            'mostrar_idade': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'mostrar_cidade': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'disponivel_mensagens': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+        }
+
+
+class PerfilInteressesForm(forms.Form):
+    """Formulário para aba Interesses"""
+    
+    interesses = forms.ModelMultipleChoiceField(
+        queryset=Interesse.objects.filter(ativo=True),
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+        }),
+        required=False,
+        label="Procurando por"
+    )
+    
+    objetivos = forms.ModelMultipleChoiceField(
+        queryset=Objetivo.objects.filter(ativo=True),
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+        }),
+        required=False,
+        label="Objetivos"
+    )
+    
+    fetiches = forms.ModelMultipleChoiceField(
+        queryset=Fetiche.objects.filter(ativo=True),
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'form-check-input'
+        }),
+        required=False,
+        label="Fetiches e Preferências"
+    )
+
+
+class PerfilBioForm(forms.ModelForm):
+    """Formulário para aba Sobre (Bio)"""
+    
+    class Meta:
+        model = Usuario
+        fields = ('bio',)
+        widgets = {
+            'bio': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 6,
+                'maxlength': 1000,
+                'placeholder': 'Conte um pouco sobre você (ou sobre o casal)...',
+                'id': 'bio-textarea'
+            })
+        }
+    
+    def clean_bio(self):
+        bio = self.cleaned_data.get('bio')
+        if bio:
+            # Filtro básico de termos proibidos (pode ser expandido)
+            termos_proibidos = ['spam', 'promoção', 'venda']
+            bio_lower = bio.lower()
+            
+            for termo in termos_proibidos:
+                if termo in bio_lower:
+                    raise ValidationError(f'O texto contém termos não permitidos.')
+        
+        return bio
 
 
 class BuscaUsuariosForm(forms.Form):

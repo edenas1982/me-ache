@@ -14,8 +14,11 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-from .models import Usuario
-from .forms import UsuarioRegistrationForm, UsuarioUpdateForm, PerfilUpdateForm
+from .models import Usuario, Cidade
+from .forms import (
+    UsuarioRegistrationForm, UsuarioUpdateForm, PerfilUpdateForm,
+    PerfilGeralForm, PerfilInformacoesForm, PerfilInteressesForm, PerfilBioForm
+)
 
 
 class UsuarioLoginView(LoginView):
@@ -96,24 +99,95 @@ class PerfilDetailView(DetailView):
         return self.request.user
 
 
-@method_decorator(login_required, name='dispatch')
-class PerfilUpdateView(UpdateView):
-    """View para editar perfil do usuário"""
-    model = Usuario
-    form_class = PerfilUpdateForm
-    template_name = 'usuarios/editar_perfil.html'
-    success_url = reverse_lazy('usuarios:perfil')
+@login_required
+def editar_perfil(request):
+    """View para editar perfil do usuário com abas"""
+    usuario = request.user
     
-    def get_object(self):
-        return self.request.user
+    if request.method == 'POST':
+        # Determinar qual aba foi submetida
+        aba = request.POST.get('aba', 'geral')
+        
+        if aba == 'geral':
+            form_geral = PerfilGeralForm(request.POST, request.FILES, instance=usuario)
+            if form_geral.is_valid():
+                form_geral.save()
+                messages.success(request, 'Informações gerais atualizadas com sucesso!')
+                return redirect('usuarios:editar_perfil')
+            else:
+                messages.error(request, 'Por favor, corrija os erros nos campos gerais.')
+        
+        elif aba == 'informacoes':
+            form_informacoes = PerfilInformacoesForm(request.POST, request.FILES, instance=usuario)
+            if form_informacoes.is_valid():
+                form_informacoes.save()
+                messages.success(request, 'Informações pessoais atualizadas com sucesso!')
+                return redirect('usuarios:editar_perfil')
+            else:
+                messages.error(request, 'Por favor, corrija os erros nas informações pessoais.')
+        
+        elif aba == 'interesses':
+            form_interesses = PerfilInteressesForm(request.POST)
+            if form_interesses.is_valid():
+                # Salvar interesses
+                usuario.interesses_usuario.all().delete()
+                for interesse in form_interesses.cleaned_data['interesses']:
+                    from .models import UsuarioInteresse
+                    UsuarioInteresse.objects.create(usuario=usuario, interesse=interesse)
+                
+                # Salvar objetivos
+                usuario.objetivos_usuario.all().delete()
+                for objetivo in form_interesses.cleaned_data['objetivos']:
+                    from .models import UsuarioObjetivo
+                    UsuarioObjetivo.objects.create(usuario=usuario, objetivo=objetivo)
+                
+                # Salvar fetiches
+                usuario.fetiches_usuario.all().delete()
+                for fetiche in form_interesses.cleaned_data['fetiches']:
+                    from .models import UsuarioFetiche
+                    UsuarioFetiche.objects.create(usuario=usuario, fetiche=fetiche)
+                
+                messages.success(request, 'Interesses atualizados com sucesso!')
+                return redirect('usuarios:editar_perfil')
+            else:
+                messages.error(request, 'Por favor, corrija os erros nos interesses.')
+        
+        elif aba == 'bio':
+            form_bio = PerfilBioForm(request.POST, instance=usuario)
+            if form_bio.is_valid():
+                form_bio.save()
+                messages.success(request, 'Biografia atualizada com sucesso!')
+                return redirect('usuarios:editar_perfil')
+            else:
+                messages.error(request, 'Por favor, corrija os erros na biografia.')
     
-    def form_valid(self, form):
-        messages.success(self.request, 'Perfil atualizado com sucesso!')
-        return super().form_valid(form)
+    # Inicializar forms com dados do usuário
+    form_geral = PerfilGeralForm(instance=usuario)
+    form_informacoes = PerfilInformacoesForm(instance=usuario)
+    form_interesses = PerfilInteressesForm()
+    form_bio = PerfilBioForm(instance=usuario)
     
-    def form_invalid(self, form):
-        messages.error(self.request, 'Por favor, corrija os erros abaixo.')
-        return super().form_invalid(form)
+    # Carregar interesses selecionados
+    if hasattr(usuario, 'interesses_usuario'):
+        form_interesses.fields['interesses'].initial = [
+            ui.interesse.id for ui in usuario.interesses_usuario.all()
+        ]
+        form_interesses.fields['objetivos'].initial = [
+            uo.objetivo.id for uo in usuario.objetivos_usuario.all()
+        ]
+        form_interesses.fields['fetiches'].initial = [
+            uf.fetiche.id for uf in usuario.fetiches_usuario.all()
+        ]
+    
+    context = {
+        'form_geral': form_geral,
+        'form_informacoes': form_informacoes,
+        'form_interesses': form_interesses,
+        'form_bio': form_bio,
+        'object': usuario,  # Para compatibilidade com template
+    }
+    
+    return render(request, 'usuarios/editar_perfil.html', context)
 
 
 @login_required
@@ -225,21 +299,39 @@ def ver_perfil_usuario(request, user_id):
 # ==============================================
 
 def cadastro_genero(request):
-    """Etapa 1: Seleção de gênero"""
+    """Etapa 1: Seleção de perfil (individual ou casal)"""
     if request.user.is_authenticated:
         return redirect('feed:home')
     
     if request.method == 'POST':
-        genero = request.POST.get('genero')
-        if genero:
+        perfil = request.POST.get('perfil')
+        
+        if perfil and perfil != '':  # Ignorar separadores vazios
+            # Extrair gênero do tipo de perfil para individual
+            genero = None
+            if perfil.startswith('individual_'):
+                genero = perfil.replace('individual_', '')
+                # Mapear para códigos de gênero
+                genero_map = {
+                    'homem': 'H',
+                    'mulher': 'M', 
+                    'transexual': 'T',
+                    'crossdresser': 'CD',
+                    'travesti': 'TV',
+                    'gp_feminina': 'GP_F',
+                    'gp_masculina': 'GP_M',
+                }
+                genero = genero_map.get(genero, 'H')
+            
             # Salvar na sessão para usar nas próximas etapas
+            request.session['cadastro_tipo_perfil'] = perfil
             request.session['cadastro_genero'] = genero
             return redirect('usuarios:cadastro_interesses')
         else:
-            messages.error(request, 'Por favor, selecione um gênero.')
+            messages.error(request, 'Por favor, selecione uma opção de perfil.')
     
     return render(request, 'usuarios/cadastro_genero.html', {
-        'genero_choices': Usuario.GENERO_CHOICES
+        'perfil_choices': Usuario.PERFIL_CHOICES
     })
 
 
@@ -248,8 +340,15 @@ def cadastro_interesses(request):
     if request.user.is_authenticated:
         return redirect('feed:home')
     
+    tipo_perfil = request.session.get('cadastro_tipo_perfil')
     genero = request.session.get('cadastro_genero')
-    if not genero:
+    
+    # Verificar se tipo_perfil existe (obrigatório para todos)
+    if not tipo_perfil:
+        return redirect('usuarios:cadastro_genero')
+    
+    # Para perfis individuais, gênero é obrigatório
+    if tipo_perfil.startswith('individual_') and not genero:
         return redirect('usuarios:cadastro_genero')
     
     if request.method == 'POST':
@@ -271,7 +370,14 @@ def cadastro_username(request):
     if request.user.is_authenticated:
         return redirect('feed:home')
     
-    if not request.session.get('cadastro_genero') or not request.session.get('cadastro_interesses'):
+    tipo_perfil = request.session.get('cadastro_tipo_perfil')
+    genero = request.session.get('cadastro_genero')
+    
+    if not tipo_perfil or not request.session.get('cadastro_interesses'):
+        return redirect('usuarios:cadastro_genero')
+    
+    # Para perfis individuais, gênero é obrigatório
+    if tipo_perfil.startswith('individual_') and not genero:
         return redirect('usuarios:cadastro_genero')
     
     if request.method == 'POST':
@@ -310,9 +416,16 @@ def cadastro_localizacao(request):
     if request.user.is_authenticated:
         return redirect('feed:home')
     
-    if not all([request.session.get('cadastro_genero'), 
+    tipo_perfil = request.session.get('cadastro_tipo_perfil')
+    genero = request.session.get('cadastro_genero')
+    
+    if not all([tipo_perfil, 
                 request.session.get('cadastro_interesses'),
                 request.session.get('cadastro_username')]):
+        return redirect('usuarios:cadastro_genero')
+    
+    # Para perfis individuais, gênero é obrigatório
+    if tipo_perfil.startswith('individual_') and not genero:
         return redirect('usuarios:cadastro_genero')
     
     if request.method == 'POST':
@@ -340,13 +453,27 @@ def cadastro_localizacao(request):
 
 def cadastro_login(request):
     """Etapa 5: Login social (Google) ou criação de conta"""
+    print(f"DEBUG - cadastro_login chamada - Method: {request.method}")
+    
     if request.user.is_authenticated:
         return redirect('feed:home')
     
-    if not all([request.session.get('cadastro_genero'),
+    tipo_perfil = request.session.get('cadastro_tipo_perfil')
+    genero = request.session.get('cadastro_genero')
+    
+    if not all([tipo_perfil,
                 request.session.get('cadastro_interesses'),
                 request.session.get('cadastro_username'),
                 request.session.get('cadastro_cidade')]):
+        print("DEBUG - Dados da sessão incompletos, redirecionando para cadastro_genero")
+        print(f"DEBUG - tipo_perfil: {tipo_perfil}")
+        print(f"DEBUG - cadastro_interesses: {request.session.get('cadastro_interesses')}")
+        print(f"DEBUG - cadastro_username: {request.session.get('cadastro_username')}")
+        print(f"DEBUG - cadastro_cidade: {request.session.get('cadastro_cidade')}")
+        return redirect('usuarios:cadastro_genero')
+    
+    # Para perfis individuais, gênero é obrigatório
+    if tipo_perfil.startswith('individual_') and not genero:
         return redirect('usuarios:cadastro_genero')
     
     if request.method == 'POST':
@@ -362,24 +489,70 @@ def cadastro_login(request):
             password = request.POST.get('password')
             password2 = request.POST.get('password2')
             
+            print(f"DEBUG - Email: {email}")
+            print(f"DEBUG - Password: {password}")
+            print(f"DEBUG - Password2: {password2}")
+            print(f"DEBUG - Passwords match: {password == password2}")
+            print(f"DEBUG - Session data: {dict(request.session)}")
+            
             if password == password2:
+                print("DEBUG - Senhas coincidem, tentando criar usuário...")
                 # Criar usuário com os dados da sessão
                 try:
                     with transaction.atomic():
+                        print("DEBUG - Verificando dados da sessão...")
+                        print(f"DEBUG - cadastro_username: {request.session.get('cadastro_username')}")
+                        print(f"DEBUG - cadastro_interesses: {request.session.get('cadastro_interesses')}")
+                        print(f"DEBUG - cadastro_cidade: {request.session.get('cadastro_cidade')}")
+                        print(f"DEBUG - cadastro_estado: {request.session.get('cadastro_estado')}")
+                        
+                        # Verificar se cadastro_interesses existe e não está vazio
+                        interesses = request.session.get('cadastro_interesses', [])
+                        if interesses:
+                            genero_interesse = interesses[0]
+                        else:
+                            genero_interesse = 'H'  # Default
+                        print(f"DEBUG - genero_interesse final: {genero_interesse}")
+                        
+                        # Determinar gênero baseado no tipo_perfil se não estiver definido
+                        tipo_perfil = request.session.get('cadastro_tipo_perfil', 'individual_homem')
+                        genero = request.session.get('cadastro_genero', 'H')
+                        
+                        print(f"DEBUG - tipo_perfil: {tipo_perfil}")
+                        print(f"DEBUG - genero da sessão: {genero}")
+                        
+                        # Se gênero não estiver definido ou estiver vazio, extrair do tipo_perfil
+                        if not genero or genero == '' or genero is None:
+                            genero_map = {
+                                'individual_homem': 'H',
+                                'individual_mulher': 'M',
+                                'individual_transexual': 'T',
+                                'individual_crossdresser': 'CD',
+                                'individual_travesti': 'TV',
+                                'individual_gp_feminina': 'GP_F',
+                                'individual_gp_masculina': 'GP_M',
+                            }
+                            genero = genero_map.get(tipo_perfil, 'H')
+                        
+                        print(f"DEBUG - genero final: {genero}")
+                        
                         user = Usuario.objects.create_user(
-                            username=request.session['cadastro_username'],
+                            username=request.session.get('cadastro_username', 'usuario_teste'),
                             email=email,
                             password=password,
-                            genero=request.session['cadastro_genero'],
-                            genero_interesse=request.session['cadastro_interesses'][0] if request.session['cadastro_interesses'] else '',
-                            cidade=request.session['cadastro_cidade'],
-                            estado=request.session['cadastro_estado'],
-                            latitude=float(request.session['cadastro_latitude']) if request.session['cadastro_latitude'] else None,
-                            longitude=float(request.session['cadastro_longitude']) if request.session['cadastro_longitude'] else None,
+                            tipo_perfil=tipo_perfil,
+                            genero=genero,
+                            genero_interesse=genero_interesse,
+                            cidade=request.session.get('cadastro_cidade', 'São Paulo'),
+                            estado=request.session.get('cadastro_estado', 'SP'),
+                            latitude=float(request.session.get('cadastro_latitude', 0)) if request.session.get('cadastro_latitude') else None,
+                            longitude=float(request.session.get('cadastro_longitude', 0)) if request.session.get('cadastro_longitude') else None,
                         )
                         
+                        print(f"DEBUG - Usuário criado com sucesso: {user.username}")
+                        
                         # Limpar sessão
-                        for key in ['cadastro_genero', 'cadastro_interesses', 'cadastro_username', 
+                        for key in ['cadastro_tipo_perfil', 'cadastro_genero', 'cadastro_interesses', 'cadastro_username', 
                                   'cadastro_cidade', 'cadastro_estado', 'cadastro_latitude', 'cadastro_longitude']:
                             if key in request.session:
                                 del request.session[key]
@@ -387,10 +560,16 @@ def cadastro_login(request):
                         # Fazer login automático
                         login(request, user)
                         messages.success(request, 'Conta criada com sucesso!')
+                        print(f"DEBUG - Login realizado, redirecionando para cadastro_foto")
                         return redirect('usuarios:cadastro_foto')
                 except Exception as e:
+                    print(f"DEBUG - ERRO ao criar usuário: {str(e)}")
+                    print(f"DEBUG - Tipo do erro: {type(e).__name__}")
+                    import traceback
+                    traceback.print_exc()
                     messages.error(request, f'Erro ao criar conta: {str(e)}')
             else:
+                print("DEBUG - Senhas não coincidem!")
                 messages.error(request, 'As senhas não coincidem.')
     
     return render(request, 'usuarios/cadastro_login.html')
@@ -450,3 +629,26 @@ def perfil_visitante(request, username):
         'total_fotos': fotos.count(),
         'total_videos': videos.count(),
     })
+
+
+def api_cidades(request):
+    """API para buscar cidades - retorna JSON"""
+    if request.method == 'GET':
+        # Buscar todas as cidades ativas
+        cidades = Cidade.objects.filter(ativa=True).order_by('estado', 'nome')
+        
+        # Converter para formato JSON
+        cidades_data = []
+        for cidade in cidades:
+            cidades_data.append({
+                'id': cidade.id,
+                'nome': cidade.nome,
+                'estado': cidade.estado,
+                'latitude': float(cidade.latitude),
+                'longitude': float(cidade.longitude),
+                'nome_completo': cidade.nome_completo
+            })
+        
+        return JsonResponse(cidades_data, safe=False)
+    
+    return JsonResponse({'error': 'Método não permitido'}, status=405)
