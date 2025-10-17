@@ -710,6 +710,365 @@ class UsuarioFetiche(models.Model):
         verbose_name_plural = "Fetiches dos Usuários"
 
 
+class EstadoCivil(models.Model):
+    """Modelo para estados civis"""
+    nome = models.CharField(max_length=50, unique=True, verbose_name="Estado Civil")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    ordem = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    
+    class Meta:
+        verbose_name = "Estado Civil"
+        verbose_name_plural = "Estados Civis"
+        ordering = ['ordem', 'nome']
+    
+    def __str__(self):
+        return self.nome
+
+
+class Etnia(models.Model):
+    """Modelo para etnias"""
+    nome = models.CharField(max_length=50, unique=True, verbose_name="Etnia")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    ordem = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    
+    class Meta:
+        verbose_name = "Etnia"
+        verbose_name_plural = "Etnias"
+        ordering = ['ordem', 'nome']
+    
+    def __str__(self):
+        return self.nome
+
+
+class TipoCorpo(models.Model):
+    """Modelo para tipos de corpo"""
+    nome = models.CharField(max_length=50, unique=True, verbose_name="Tipo de Corpo")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    ordem = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    
+    class Meta:
+        verbose_name = "Tipo de Corpo"
+        verbose_name_plural = "Tipos de Corpo"
+        ordering = ['ordem', 'nome']
+    
+    def __str__(self):
+        return self.nome
+
+
+class NivelAbertura(models.Model):
+    """Modelo para níveis de abertura"""
+    nome = models.CharField(max_length=50, unique=True, verbose_name="Nível de Abertura")
+    descricao = models.TextField(blank=True, verbose_name="Descrição")
+    ativo = models.BooleanField(default=True, verbose_name="Ativo")
+    ordem = models.PositiveIntegerField(default=0, verbose_name="Ordem")
+    
+    class Meta:
+        verbose_name = "Nível de Abertura"
+        verbose_name_plural = "Níveis de Abertura"
+        ordering = ['ordem', 'nome']
+    
+    def __str__(self):
+        return self.nome
+
+
+class PerfilDetalhado(models.Model):
+    """Modelo para dados detalhados do perfil (Ele/Ela para casais)"""
+    
+    # Relacionamento com usuário
+    usuario = models.ForeignKey(
+        'Usuario', 
+        on_delete=models.CASCADE, 
+        related_name='perfis_detalhados',
+        verbose_name="Usuário"
+    )
+    
+    # Identificação da pessoa (para casais)
+    PESSOA_CHOICES = [
+        ('principal', 'Pessoa Principal'),
+        ('ele', 'Ele'),
+        ('ela', 'Ela'),
+    ]
+    pessoa = models.CharField(
+        max_length=10, 
+        choices=PESSOA_CHOICES, 
+        default='principal',
+        verbose_name="Pessoa"
+    )
+    
+    # Dados pessoais básicos
+    nome_apelido = models.CharField(
+        max_length=100, 
+        blank=True, 
+        verbose_name="Nome / Apelido Público"
+    )
+    data_nascimento = models.DateField(
+        null=True, 
+        blank=True, 
+        verbose_name="Data de Nascimento"
+    )
+    profissao = models.CharField(
+        max_length=100, 
+        blank=True, 
+        verbose_name="Profissão"
+    )
+    
+    # Características físicas
+    altura = models.PositiveIntegerField(
+        null=True, 
+        blank=True, 
+        verbose_name="Altura (cm)"
+    )
+    peso = models.PositiveIntegerField(
+        null=True, 
+        blank=True, 
+        verbose_name="Peso (kg)"
+    )
+    
+    # Relacionamentos com outras tabelas
+    signo = models.ForeignKey(
+        'Signo', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Signo"
+    )
+    estado_civil = models.ForeignKey(
+        'EstadoCivil', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Estado Civil"
+    )
+    etnia = models.ForeignKey(
+        'Etnia', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Etnia"
+    )
+    tipo_corpo = models.ForeignKey(
+        'TipoCorpo', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Tipo de Corpo"
+    )
+    cor_olhos = models.ForeignKey(
+        'CorOlhos', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Cor dos Olhos"
+    )
+    cor_cabelos = models.ForeignKey(
+        'CorCabelos', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Cor dos Cabelos"
+    )
+    
+    # Orientação sexual
+    ORIENTACAO_CHOICES = [
+        ('heterossexual', 'Heterossexual'),
+        ('bissexual', 'Bissexual'),
+        ('homossexual', 'Homossexual'),
+        ('pansexual', 'Pansexual'),
+        ('assexual', 'Assexual'),
+        ('outro', 'Outro'),
+    ]
+    orientacao_sexual = models.CharField(
+        max_length=20, 
+        choices=ORIENTACAO_CHOICES, 
+        blank=True,
+        verbose_name="Orientação Sexual"
+    )
+    
+    # Estilo de vida
+    FUMANTE_CHOICES = [
+        ('nao', 'Não'),
+        ('sim', 'Sim'),
+        ('ocasionalmente', 'Ocasionalmente'),
+    ]
+    fumante = models.CharField(
+        max_length=15, 
+        choices=FUMANTE_CHOICES, 
+        default='nao',
+        verbose_name="Fumante"
+    )
+    
+    BEBE_CHOICES = [
+        ('nao', 'Não'),
+        ('sim', 'Sim'),
+        ('socialmente', 'Socialmente'),
+    ]
+    bebe = models.CharField(
+        max_length=15, 
+        choices=BEBE_CHOICES, 
+        default='nao',
+        verbose_name="Bebe"
+    )
+    
+    # Descrição pessoal
+    descricao_pessoal = models.TextField(
+        max_length=500, 
+        blank=True, 
+        verbose_name="Descrição Pessoal"
+    )
+    
+    # Timestamps
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    
+    class Meta:
+        verbose_name = "Perfil Detalhado"
+        verbose_name_plural = "Perfis Detalhados"
+        unique_together = ['usuario', 'pessoa']
+        ordering = ['usuario', 'pessoa']
+    
+    def __str__(self):
+        return f"{self.usuario.username} - {self.get_pessoa_display()}"
+    
+    @property
+    def idade(self):
+        """Calcula a idade baseada na data de nascimento"""
+        if self.data_nascimento:
+            from datetime import date
+            hoje = date.today()
+            return hoje.year - self.data_nascimento.year - (
+                (hoje.month, hoje.day) < (self.data_nascimento.month, self.data_nascimento.day)
+            )
+        return None
+
+
+class PerfilInteresses(models.Model):
+    """Modelo para interesses e preferências do perfil"""
+    
+    # Relacionamento com usuário
+    usuario = models.OneToOneField(
+        'Usuario', 
+        on_delete=models.CASCADE, 
+        related_name='perfil_interesses',
+        verbose_name="Usuário"
+    )
+    
+    # Nível de abertura
+    nivel_abertura = models.ForeignKey(
+        'NivelAbertura', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        verbose_name="Nível de Abertura"
+    )
+    
+    # Campos booleanos para interesses
+    procurando_casais = models.BooleanField(default=False, verbose_name="Procurando Casais")
+    procurando_mulheres = models.BooleanField(default=False, verbose_name="Procurando Mulheres")
+    procurando_homens = models.BooleanField(default=False, verbose_name="Procurando Homens")
+    procurando_grupos = models.BooleanField(default=False, verbose_name="Procurando Grupos")
+    procurando_amizades = models.BooleanField(default=False, verbose_name="Procurando Amizades")
+    procurando_experiencias = models.BooleanField(default=False, verbose_name="Procurando Experiências")
+    
+    # Objetivos
+    objetivo_amizades = models.BooleanField(default=False, verbose_name="Objetivo: Amizades")
+    objetivo_relacionamento = models.BooleanField(default=False, verbose_name="Objetivo: Relacionamento")
+    objetivo_troca = models.BooleanField(default=False, verbose_name="Objetivo: Troca de Casais")
+    objetivo_aventura = models.BooleanField(default=False, verbose_name="Objetivo: Aventura")
+    objetivo_relacao_aberta = models.BooleanField(default=False, verbose_name="Objetivo: Relação Aberta")
+    objetivo_curiosidade = models.BooleanField(default=False, verbose_name="Objetivo: Curiosidade")
+    
+    # Preferências
+    preferencia_romantico = models.BooleanField(default=False, verbose_name="Preferência: Romântico")
+    preferencia_aventureiro = models.BooleanField(default=False, verbose_name="Preferência: Aventureiro")
+    preferencia_intimista = models.BooleanField(default=False, verbose_name="Preferência: Intimista")
+    preferencia_social = models.BooleanField(default=False, verbose_name="Preferência: Social")
+    preferencia_privacidade = models.BooleanField(default=False, verbose_name="Preferência: Privacidade")
+    preferencia_publico = models.BooleanField(default=False, verbose_name="Preferência: Público")
+    
+    # Confirmação de idade
+    maior_18 = models.BooleanField(default=True, verbose_name="Maior de 18 anos")
+    
+    # Timestamps
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    
+    class Meta:
+        verbose_name = "Perfil de Interesses"
+        verbose_name_plural = "Perfis de Interesses"
+    
+    def __str__(self):
+        return f"Interesses - {self.usuario.username}"
+
+
+class PerfilSobre(models.Model):
+    """Modelo para informações sobre o perfil"""
+    
+    # Relacionamento com usuário
+    usuario = models.OneToOneField(
+        'Usuario', 
+        on_delete=models.CASCADE, 
+        related_name='perfil_sobre',
+        verbose_name="Usuário"
+    )
+    
+    # Informações sobre o casal/pessoa
+    quem_somos = models.TextField(
+        max_length=500, 
+        blank=True, 
+        verbose_name="Quem Somos"
+    )
+    inspiracao = models.TextField(
+        max_length=300, 
+        blank=True, 
+        verbose_name="O que nos inspira"
+    )
+    frase_destaque = models.CharField(
+        max_length=100, 
+        blank=True, 
+        verbose_name="Frase de Destaque"
+    )
+    
+    # Links externos
+    instagram = models.URLField(
+        blank=True, 
+        verbose_name="Instagram"
+    )
+    outro_link = models.URLField(
+        blank=True, 
+        verbose_name="Outro Link"
+    )
+    
+    # Biografias individuais (para casais)
+    bio_ele = models.TextField(
+        max_length=300, 
+        blank=True, 
+        verbose_name="Bio - Ele"
+    )
+    bio_ela = models.TextField(
+        max_length=300, 
+        blank=True, 
+        verbose_name="Bio - Ela"
+    )
+    
+    # Bio individual (para pessoas solteiras)
+    bio_individual = models.TextField(
+        max_length=400, 
+        blank=True, 
+        verbose_name="Bio Individual"
+    )
+    
+    # Timestamps
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Criado em")
+    atualizado_em = models.DateTimeField(auto_now=True, verbose_name="Atualizado em")
+    
+    class Meta:
+        verbose_name = "Perfil Sobre"
+        verbose_name_plural = "Perfis Sobre"
+    
+    def __str__(self):
+        return f"Sobre - {self.usuario.username}"
+
+
 class Cidade(models.Model):
     """Modelo para armazenar cidades brasileiras com coordenadas"""
     

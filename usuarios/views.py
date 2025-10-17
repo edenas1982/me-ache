@@ -14,7 +14,11 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-from .models import Usuario, Cidade, TipoRelacionamento
+from .models import (
+    Usuario, Cidade, TipoRelacionamento, EstadoCivil, Etnia, TipoCorpo, 
+    NivelAbertura, Signo, CorOlhos, CorCabelos, PerfilDetalhado, 
+    PerfilInteresses, PerfilSobre
+)
 from .forms import (
     UsuarioRegistrationForm, UsuarioUpdateForm, PerfilUpdateForm,
     PerfilGeralForm, PerfilInformacoesForm, PerfilInteressesForm, PerfilBioForm
@@ -105,95 +109,154 @@ def editar_perfil(request):
     usuario = request.user
     
     if request.method == 'POST':
-        # Determinar qual aba foi submetida
-        aba = request.POST.get('aba', 'geral')
-        
-        if aba == 'geral':
-            form_geral = PerfilGeralForm(request.POST, request.FILES, instance=usuario)
-            if form_geral.is_valid():
-                form_geral.save()
-                messages.success(request, 'Informações gerais atualizadas com sucesso!')
-                return redirect('usuarios:editar_perfil')
-            else:
-                messages.error(request, 'Por favor, corrija os erros nos campos gerais.')
-        
-        elif aba == 'informacoes':
-            form_informacoes = PerfilInformacoesForm(request.POST, request.FILES, instance=usuario)
-            if form_informacoes.is_valid():
-                form_informacoes.save()
-                messages.success(request, 'Informações pessoais atualizadas com sucesso!')
-                return redirect('usuarios:editar_perfil')
-            else:
-                messages.error(request, 'Por favor, corrija os erros nas informações pessoais.')
-        
-        elif aba == 'interesses':
-            form_interesses = PerfilInteressesForm(request.POST)
-            if form_interesses.is_valid():
+        try:
+            with transaction.atomic():
+                # Salvar dados básicos do usuário
+                if 'username' in request.POST:
+                    usuario.username = request.POST.get('username', usuario.username)
+                if 'tipo_perfil' in request.POST:
+                    usuario.tipo_perfil = request.POST.get('tipo_perfil', usuario.tipo_perfil)
+                if 'cidade_ref' in request.POST and request.POST.get('cidade_ref'):
+                    usuario.cidade_ref_id = request.POST.get('cidade_ref')
+                if 'tipo_relacionamento' in request.POST and request.POST.get('tipo_relacionamento'):
+                    usuario.tipo_relacionamento_id = request.POST.get('tipo_relacionamento')
+                if 'tempo_juntos' in request.POST:
+                    usuario.tempo_juntos = request.POST.get('tempo_juntos', '')
+                usuario.save()
+                
+                # Salvar dados detalhados (Ele/Ela para casais)
+                if usuario.tipo_perfil and usuario.tipo_perfil.startswith('casal_'):
+                    # Dados do "Ele"
+                    perfil_ele, created = PerfilDetalhado.objects.get_or_create(
+                        usuario=usuario, pessoa='ele'
+                    )
+                    _salvar_dados_pessoa(request, perfil_ele, 'ele')
+                    
+                    # Dados da "Ela"
+                    perfil_ela, created = PerfilDetalhado.objects.get_or_create(
+                        usuario=usuario, pessoa='ela'
+                    )
+                    _salvar_dados_pessoa(request, perfil_ela, 'ela')
+                else:
+                    # Dados da pessoa principal (individual)
+                    perfil_principal, created = PerfilDetalhado.objects.get_or_create(
+                        usuario=usuario, pessoa='principal'
+                    )
+                    _salvar_dados_pessoa(request, perfil_principal, 'principal')
+                
                 # Salvar interesses
-                usuario.interesses_usuario.all().delete()
-                for interesse in form_interesses.cleaned_data['interesses']:
-                    from .models import UsuarioInteresse
-                    UsuarioInteresse.objects.create(usuario=usuario, interesse=interesse)
+                perfil_interesses, created = PerfilInteresses.objects.get_or_create(
+                    usuario=usuario
+                )
+                _salvar_interesses(request, perfil_interesses)
                 
-                # Salvar objetivos
-                usuario.objetivos_usuario.all().delete()
-                for objetivo in form_interesses.cleaned_data['objetivos']:
-                    from .models import UsuarioObjetivo
-                    UsuarioObjetivo.objects.create(usuario=usuario, objetivo=objetivo)
+                # Salvar informações sobre
+                perfil_sobre, created = PerfilSobre.objects.get_or_create(
+                    usuario=usuario
+                )
+                _salvar_sobre(request, perfil_sobre, usuario.tipo_perfil)
                 
-                # Salvar fetiches
-                usuario.fetiches_usuario.all().delete()
-                for fetiche in form_interesses.cleaned_data['fetiches']:
-                    from .models import UsuarioFetiche
-                    UsuarioFetiche.objects.create(usuario=usuario, fetiche=fetiche)
-                
-                messages.success(request, 'Interesses atualizados com sucesso!')
+                messages.success(request, 'Perfil atualizado com sucesso!')
                 return redirect('usuarios:editar_perfil')
-            else:
-                messages.error(request, 'Por favor, corrija os erros nos interesses.')
-        
-        elif aba == 'bio':
-            form_bio = PerfilBioForm(request.POST, instance=usuario)
-            if form_bio.is_valid():
-                form_bio.save()
-                messages.success(request, 'Biografia atualizada com sucesso!')
-                return redirect('usuarios:editar_perfil')
-            else:
-                messages.error(request, 'Por favor, corrija os erros na biografia.')
-    
-    # Inicializar forms com dados do usuário
-    form_geral = PerfilGeralForm(instance=usuario)
-    form_informacoes = PerfilInformacoesForm(instance=usuario)
-    form_interesses = PerfilInteressesForm()
-    form_bio = PerfilBioForm(instance=usuario)
-    
-    # Carregar interesses selecionados
-    if hasattr(usuario, 'interesses_usuario'):
-        form_interesses.fields['interesses'].initial = [
-            ui.interesse.id for ui in usuario.interesses_usuario.all()
-        ]
-        form_interesses.fields['objetivos'].initial = [
-            uo.objetivo.id for uo in usuario.objetivos_usuario.all()
-        ]
-        form_interesses.fields['fetiches'].initial = [
-            uf.fetiche.id for uf in usuario.fetiches_usuario.all()
-        ]
+                
+        except Exception as e:
+            messages.error(request, f'Erro ao salvar perfil: {str(e)}')
     
     # Buscar dados necessários
     tipos_relacionamento = TipoRelacionamento.objects.filter(ativo=True).order_by('ordem', 'nome')
-    cidades = Cidade.objects.all().order_by('nome')[:100]  # Limitar para performance
+    cidades = Cidade.objects.all().order_by('nome')[:100]
+    estados_civis = EstadoCivil.objects.filter(ativo=True).order_by('ordem', 'nome')
+    etnias = Etnia.objects.filter(ativo=True).order_by('ordem', 'nome')
+    tipos_corpo = TipoCorpo.objects.filter(ativo=True).order_by('ordem', 'nome')
+    niveis_abertura = NivelAbertura.objects.filter(ativo=True).order_by('ordem', 'nome')
+    signos = Signo.objects.filter(ativo=True).order_by('ordem')
+    cores_olhos = CorOlhos.objects.filter(ativo=True).order_by('ordem', 'nome')
+    cores_cabelos = CorCabelos.objects.filter(ativo=True).order_by('ordem', 'nome')
     
     context = {
-        'form_geral': form_geral,
-        'form_informacoes': form_informacoes,
-        'form_interesses': form_interesses,
-        'form_bio': form_bio,
         'tipos_relacionamento': tipos_relacionamento,
         'cidades': cidades,
-        'object': usuario,  # Para compatibilidade com template
+        'estados_civis': estados_civis,
+        'etnias': etnias,
+        'tipos_corpo': tipos_corpo,
+        'niveis_abertura': niveis_abertura,
+        'signos': signos,
+        'cores_olhos': cores_olhos,
+        'cores_cabelos': cores_cabelos,
+        'object': usuario,
+        'user': usuario,
     }
     
     return render(request, 'usuarios/editar_perfil_limpo.html', context)
+
+def _salvar_dados_pessoa(request, perfil, prefixo):
+    """Salva dados de uma pessoa específica (ele/ela/principal)"""
+    perfil.nome_apelido = request.POST.get(f'nome_{prefixo}', '')
+    if request.POST.get(f'data_nascimento_{prefixo}'):
+        perfil.data_nascimento = request.POST.get(f'data_nascimento_{prefixo}')
+    perfil.profissao = request.POST.get(f'profissao_{prefixo}', '')
+    
+    if request.POST.get(f'altura_{prefixo}'):
+        perfil.altura = int(request.POST.get(f'altura_{prefixo}'))
+    if request.POST.get(f'peso_{prefixo}'):
+        perfil.peso = int(request.POST.get(f'peso_{prefixo}'))
+    
+    if request.POST.get(f'signo_{prefixo}'):
+        perfil.signo_id = request.POST.get(f'signo_{prefixo}')
+    if request.POST.get(f'estado_civil_{prefixo}'):
+        perfil.estado_civil_id = request.POST.get(f'estado_civil_{prefixo}')
+    if request.POST.get(f'etnia_{prefixo}'):
+        perfil.etnia_id = request.POST.get(f'etnia_{prefixo}')
+    if request.POST.get(f'tipo_corpo_{prefixo}'):
+        perfil.tipo_corpo_id = request.POST.get(f'tipo_corpo_{prefixo}')
+    if request.POST.get(f'olhos_{prefixo}'):
+        perfil.cor_olhos_id = request.POST.get(f'olhos_{prefixo}')
+    if request.POST.get(f'cabelos_{prefixo}'):
+        perfil.cor_cabelos_id = request.POST.get(f'cabelos_{prefixo}')
+    
+    perfil.orientacao_sexual = request.POST.get(f'orientacao_{prefixo}', '')
+    perfil.fumante = request.POST.get(f'fumante_{prefixo}', 'nao')
+    perfil.bebe = request.POST.get(f'bebe_{prefixo}', 'nao')
+    perfil.descricao_pessoal = request.POST.get(f'descricao_{prefixo}', '')
+    
+    perfil.save()
+
+def _salvar_interesses(request, perfil_interesses):
+    """Salva interesses e preferências"""
+    if request.POST.get('nivel_abertura'):
+        perfil_interesses.nivel_abertura_id = request.POST.get('nivel_abertura')
+    
+    # Campos booleanos
+    campos_booleanos = [
+        'procurando_casais', 'procurando_mulheres', 'procurando_homens',
+        'procurando_grupos', 'procurando_amizades', 'procurando_experiencias',
+        'objetivo_amizades', 'objetivo_relacionamento', 'objetivo_troca',
+        'objetivo_aventura', 'objetivo_relacao_aberta', 'objetivo_curiosidade',
+        'preferencia_romantico', 'preferencia_aventureiro', 'preferencia_intimista',
+        'preferencia_social', 'preferencia_privacidade', 'preferencia_publico',
+        'maior_18'
+    ]
+    
+    for campo in campos_booleanos:
+        setattr(perfil_interesses, campo, campo in request.POST)
+    
+    perfil_interesses.save()
+
+def _salvar_sobre(request, perfil_sobre, tipo_perfil):
+    """Salva informações sobre o perfil"""
+    perfil_sobre.quem_somos = request.POST.get('quem_somos', '')
+    perfil_sobre.inspiracao = request.POST.get('inspiracao', '')
+    perfil_sobre.frase_destaque = request.POST.get('frase_destaque', '')
+    perfil_sobre.instagram = request.POST.get('instagram', '')
+    perfil_sobre.outro_link = request.POST.get('outro_link', '')
+    
+    if tipo_perfil and tipo_perfil.startswith('casal_'):
+        perfil_sobre.bio_ele = request.POST.get('bio_ele', '')
+        perfil_sobre.bio_ela = request.POST.get('bio_ela', '')
+    else:
+        perfil_sobre.bio_individual = request.POST.get('bio_individual', '')
+    
+    perfil_sobre.save()
 
 
 @login_required
