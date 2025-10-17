@@ -25,7 +25,7 @@
     
     .edit-container {
         min-height: 100vh;
-        padding: 80px 0 20px 0; /* Espaço para o menu fixo */
+        padding: 10px 0 20px 0; /* Espaço mínimo para aba fixa */
     }
     
     .edit-header {
@@ -212,8 +212,10 @@
         z-index: 1000;
         background: var(--bg-card);
         box-shadow: var(--shadow-medium);
-        padding: 10px 20px;
+        padding: 5px 20px;
         border-bottom: 1px solid var(--border-light);
+        margin: 0;
+        height: 50px;
     }
     
     .tabs-nav {
@@ -271,50 +273,45 @@
         margin-top: 0px;
     }
     
-    /* Eliminar espaçamento entre progresso e abas */
-    .progress-section + .tabs-nav-container {
-        margin-top: 0px;
+    /* ESPAÇAMENTO LIMPO E SIMPLES */
+    .edit-container {
+        padding: 20px 0;
     }
     
-    /* CORREÇÃO CIRÚRGICA - Apenas o necessário */
     .edit-header {
-        margin-bottom: 0px !important;
+        margin-bottom: 5px;
+        padding: 20px;
     }
     
     .progress-section {
-        margin-bottom: 0px !important;
-        margin-top: 5px !important;
+        margin: 10px 20px 5px;
+        padding: 10px 15px;
     }
     
     .tabs-nav-container {
-        margin-top: 0px !important;
-        margin-bottom: 0px !important;
+        margin: 0;
+        padding: 10px 20px;
     }
     
-    /* ELIMINAR O VÃO GIGANTESCO - FORÇA BRUTA */
-    * {
-        margin-top: 0px !important;
-        padding-top: 0px !important;
+    .tabs-container {
+        margin: 0;
+        padding: 0;
+        margin-top: 0;
     }
     
-    .edit-header + form {
-        margin-top: 0px !important;
-        padding-top: 0px !important;
+    .tab-content {
+        padding: 10px;
+        display: none;
     }
     
-    .edit-header + form .tabs-nav-container {
-        margin-top: 0px !important;
-        padding-top: 0px !important;
+    .tab-content.active {
+        display: block !important;
     }
     
-    .tabs-nav-container + .tab-content {
-        margin-top: 0px !important;
-        padding-top: 0px !important;
-    }
-    
-    .tab-content .form-section {
-        margin-top: 0px !important;
-        padding-top: 0px !important;
+    .form-section {
+        padding: 5px;
+        margin-bottom: 0;
+        margin-top: 0;
     }
     
     /* Responsivo para mobile */
@@ -323,10 +320,24 @@
             padding: 8px 15px;
         }
         
+        .tabs-nav {
+            flex-wrap: nowrap !important;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .tabs-nav::-webkit-scrollbar {
+            display: none;
+        }
+        
         .tab-button {
-            padding: 10px 15px;
-            margin: 0 4px;
-            font-size: 0.9rem;
+            flex: 0 0 auto !important;
+            min-width: 80px;
+            padding: 10px 8px;
+            margin: 0 2px;
+            font-size: 0.8rem;
+            white-space: nowrap;
         }
         
         .edit-container {
@@ -335,13 +346,12 @@
     }
     
     .tab-content {
-        display: none;
-        padding: 0px !important;
+        display: none !important;
         animation: fadeIn 0.3s ease;
     }
     
     .tab-content.active {
-        display: block;
+        display: block !important;
     }
     
     @keyframes fadeIn {
@@ -350,16 +360,15 @@
     }
     
     .form-section {
-        margin-bottom: 0px !important;
-        margin-top: 0px !important;
-        padding: 0px 20px 20px 20px !important;
+        margin-bottom: 20px;
+        padding: 20px;
     }
     
     .section-title {
         font-size: 1.3rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 15px;
+        margin-bottom: 5px;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -371,14 +380,15 @@
     }
     
     .form-group {
-        margin-bottom: 15px;
+        margin-bottom: 3px;
     }
     
     .form-label {
         font-weight: 600;
         color: var(--text-primary);
-        margin-bottom: 5px;
+        margin-bottom: 2px;
         display: block;
+        font-size: 0.9rem;
     }
     
     .form-control {
@@ -422,34 +432,42 @@
     
     .couple-section {
         display: none;
+        height: 0;
+        overflow: hidden;
         background: #f8fafc;
         border-radius: 15px;
-        padding: 15px;
-        margin-top: 10px;
-        border: 1px solid var(--border-light);
+        padding: 0;
+        margin: 0;
+        border: none;
+        transition: all 0.3s ease;
     }
     
     .couple-section.active {
         display: block !important;
+        height: auto;
+        overflow: visible;
+        padding: 15px;
+        margin-top: 10px;
+        border: 1px solid var(--border-light);
         animation: slideDown 0.3s ease;
     }
     
     /* Novos estilos para a aba informações */
     .info-section {
         background: #f8f9fa;
-        border-radius: 12px;
-        padding: 12px;
-        margin-bottom: 10px;
+        border-radius: 8px;
+        padding: 5px;
+        margin-bottom: 2px;
         border: 1px solid #e9ecef;
     }
     
     .subsection-title {
         color: #495057;
-        font-size: 1.1rem;
+        font-size: 1rem;
         font-weight: 600;
-        margin-bottom: 10px;
-        padding-bottom: 8px;
-        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 5px;
+        padding-bottom: 3px;
+        border-bottom: 1px solid #dee2e6;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -481,10 +499,18 @@
     
     .person-panel {
         display: none;
+        height: 0;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
     }
     
     .person-panel.active {
         display: block;
+        height: auto;
+        overflow: visible;
+        margin: 0;
+        padding: 0;
     }
     
     /* Otimização Mobile - 1 campo por linha */
@@ -595,6 +621,10 @@
     
     .person-panel.active {
         display: block;
+        height: auto;
+        overflow: visible;
+        margin: 0;
+        padding: 0;
     }
     
     /* Autocomplete para cidade/estado */
@@ -894,65 +924,7 @@
 
 {% block content %}
 <div class="container edit-container">
-    <!-- Header -->
-    <div class="edit-header">
-        <div class="header-user-info">
-            <!-- Foto miniatura circular -->
-            <div class="header-photo-container">
-                {% if user.foto_perfil %}
-                    <img src="{{ user.foto_perfil.url }}" alt="Foto do perfil" class="header-photo">
-                {% else %}
-                    <img src="{% static 'images/default-avatar.png' %}" alt="Foto padrão" class="header-photo">
-                {% endif %}
-                <!-- Badges VIP e Verificado -->
-                <div class="header-badges">
-                    {% if user.is_vip %}
-                        <span class="badge-vip">
-                            <i class="bi bi-star-fill"></i>VIP
-                        </span>
-                    {% endif %}
-                    {% if user.is_verificado %}
-                        <span class="badge-verified">
-                            <i class="bi bi-patch-check-fill"></i>✓
-                        </span>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <!-- Informações do usuário -->
-            <div class="header-user-details">
-                <h1 class="header-user-name">
-                    {{ user.username }}
-                </h1>
-                <p class="header-user-type">
-                    {% if 'individual' in user.tipo_perfil %}
-                        {% if user.genero == 'H' %}Homem{% elif user.genero == 'M' %}Mulher{% elif user.genero == 'T' %}Transexual{% elif user.genero == 'CD' %}Crossdresser{% elif user.genero == 'TV' %}Travesti{% elif user.genero == 'GP_F' %}GP Feminina{% elif user.genero == 'GP_M' %}GP Masculina{% endif %}
-                        {% if user.idade %} - {{ user.idade }} anos{% endif %}
-                    {% else %}
-                        Casal
-                        {% if user.idade and user.idade_parceiro %}
-                            : Ele {{ user.idade }} Ela {{ user.idade_parceiro }} - Anos
-                        {% endif %}
-                    {% endif %}
-                </p>
-                {% if user.cidade and user.estado %}
-                    <p class="header-user-location">
-                        {{ user.cidade }}/{{ user.estado }}
-                    </p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Barra de Progresso (igual ao perfil proprietário) -->
-        <div class="progress-section">
-            <p class="progress-message">Olá, {{ user.username }}! Seu perfil está <span id="progress-percentage">{{ user.progresso_perfil }}</span>% completo 💪</p>
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill" data-width="{{ user.progresso_perfil }}">
-                    <div class="progress-percentage">{{ user.progresso_perfil }}%</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Header removido temporariamente -->
 
     <!-- Formulário Principal -->
     <form method="post" enctype="multipart/form-data" id="profile-edit-form">
@@ -1077,6 +1049,43 @@
                         Informações Pessoais
                     </h3>
                     
+                    <div style="background: red; color: white; padding: 20px; font-size: 24px; font-weight: bold;">
+                        🚨 TESTE VISÍVEL - ABA INFORMAÇÕES FUNCIONANDO! 🚨
+                    </div>
+                    <p style="font-size: 18px; color: blue; font-weight: bold;">
+                        Se você está vendo isso em VERMELHO, a aba está funcionando!
+                    </p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Nome Completo</label>
+                                <input type="text" name="nome_completo" class="form-control" placeholder="Digite seu nome">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Data de Nascimento</label>
+                                <input type="date" name="data_nascimento" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Profissão</label>
+                                <input type="text" name="profissao" class="form-control" placeholder="Sua profissão">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Cidade</label>
+                                <input type="text" name="cidade" class="form-control" placeholder="Sua cidade">
+                            </div>
+                        </div>
+                    </div>
+                    
                     
                     <!-- Controle de Abas para Casais -->
                     <div id="couple-tabs-control" class="couple-section">
@@ -1195,7 +1204,6 @@
                                 <i class="bi bi-chevron-down collapse-icon"></i>
                             </h4>
                             <div class="subsection-content">
-                            </h4>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -1263,7 +1271,6 @@
                                 <i class="bi bi-chevron-down collapse-icon"></i>
                             </h4>
                             <div class="subsection-content">
-                            </h4>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -1413,8 +1420,7 @@
                                 <span><i class="bi bi-heart me-2"></i>Estilo de Vida <small class="text-muted">(0/5 preenchidos)</small></span>
                                 <i class="bi bi-chevron-down collapse-icon"></i>
                             </h4>
-                            <div class="subsection-content"> - Parceiro(a)
-                            </h4>
+                            <div class="subsection-content">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -1481,8 +1487,7 @@
                                 <span><i class="bi bi-rainbow me-2"></i>Identidade e Preferências <small class="text-muted">(0/3 preenchidos)</small></span>
                                 <i class="bi bi-chevron-down collapse-icon"></i>
                             </h4>
-                            <div class="subsection-content"> - Parceiro(a)
-                            </h4>
+                            <div class="subsection-content">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -1763,24 +1768,59 @@
 </div>
 
 <script>
-// Sistema de Abas
+// Sistema de Abas - VERSÃO ULTRA SIMPLES QUE FUNCIONA
 document.addEventListener('DOMContentLoaded', function() {
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
+    console.log('=== INICIANDO SISTEMA DE ABAS ===');
     
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const targetTab = button.getAttribute('data-tab');
-            
-            // Remove active de todos os botões e conteúdos
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabContents.forEach(content => content.classList.remove('active'));
-            
-            // Adiciona active ao selecionado
-            button.classList.add('active');
-            document.getElementById(`tab-${targetTab}`).classList.add('active');
+    // Função para mostrar aba - VERSÃO QUE FUNCIONA
+    function mostrarAba(nomeAba) {
+        console.log('=== MOSTRANDO ABA:', nomeAba, '===');
+        
+        // Esconder TODAS as abas
+        document.querySelectorAll('.tab-content').forEach(aba => {
+            aba.style.display = 'none';
+            aba.classList.remove('active');
+        });
+        
+        // Remover active de TODOS os botões
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Mostrar aba selecionada
+        const aba = document.getElementById('tab-' + nomeAba);
+        console.log('Aba encontrada:', aba);
+        
+        if (aba) {
+            aba.style.display = 'block';
+            aba.classList.add('active');
+            console.log('✅ ABA EXIBIDA COM SUCESSO!');
+        } else {
+            console.error('❌ Aba não encontrada: tab-' + nomeAba);
+        }
+        
+        // Ativar botão
+        const botao = document.querySelector('[data-tab="' + nomeAba + '"]');
+        if (botao) {
+            botao.classList.add('active');
+            console.log('✅ Botão ativado');
+        }
+        
+        console.log('=== FIM MOSTRAR ABA ===');
+    }
+    
+    // Adicionar eventos aos botões
+    document.querySelectorAll('.tab-button').forEach(botao => {
+        botao.addEventListener('click', function() {
+            const aba = this.getAttribute('data-tab');
+            console.log('Clique na aba:', aba);
+            mostrarAba(aba);
         });
     });
+    
+    // Mostrar primeira aba por padrão
+    mostrarAba('geral');
+    console.log('=== SISTEMA INICIADO ===');
 });
 
 // Adaptação para Modo Casal

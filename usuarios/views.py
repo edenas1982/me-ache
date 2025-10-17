@@ -14,7 +14,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-from .models import Usuario, Cidade
+from .models import Usuario, Cidade, TipoRelacionamento
 from .forms import (
     UsuarioRegistrationForm, UsuarioUpdateForm, PerfilUpdateForm,
     PerfilGeralForm, PerfilInformacoesForm, PerfilInteressesForm, PerfilBioForm
@@ -179,15 +179,21 @@ def editar_perfil(request):
             uf.fetiche.id for uf in usuario.fetiches_usuario.all()
         ]
     
+    # Buscar dados necessários
+    tipos_relacionamento = TipoRelacionamento.objects.filter(ativo=True).order_by('ordem', 'nome')
+    cidades = Cidade.objects.all().order_by('nome')[:100]  # Limitar para performance
+    
     context = {
         'form_geral': form_geral,
         'form_informacoes': form_informacoes,
         'form_interesses': form_interesses,
         'form_bio': form_bio,
+        'tipos_relacionamento': tipos_relacionamento,
+        'cidades': cidades,
         'object': usuario,  # Para compatibilidade com template
     }
     
-    return render(request, 'usuarios/editar_perfil.html', context)
+    return render(request, 'usuarios/editar_perfil_limpo.html', context)
 
 
 @login_required

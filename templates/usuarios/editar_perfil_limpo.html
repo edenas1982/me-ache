@@ -1,0 +1,1313 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Editar Perfil - Me Ache{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* RESET SIMPLES E DIRETO */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    /* CABEÇALHO FIXO */
+    .header-fixed {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        z-index: 1000;
+        padding: 10px 0;
+    }
+    
+    .tabs {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+    
+    .tab-btn {
+        padding: 10px 20px;
+        background: #e0e0e0;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    
+    .tab-btn.active {
+        background: #e91e63;
+        color: white;
+    }
+    
+    /* CONTEÚDO */
+    .content {
+        margin-top: 80px; /* Espaço para header fixo */
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    /* FORMULÁRIO */
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+    
+    .row {
+        display: flex;
+        gap: 15px;
+    }
+    
+    .col-6 {
+        flex: 1;
+    }
+    
+    /* BOTÃO SALVAR */
+    .save-btn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #e91e63;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .save-btn:hover {
+        background: #c2185b;
+    }
+    
+    /* Autocomplete para cidade */
+    .autocomplete-container {
+        position: relative;
+    }
+    
+    .suggestions-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .suggestion-item {
+        padding: 10px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .suggestion-item:hover {
+        background-color: #f5f5f5;
+    }
+    
+    .suggestion-item:last-child {
+        border-bottom: none;
+    }
+    
+    .suggestion-city {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .suggestion-state {
+        font-size: 12px;
+        color: #666;
+        background: #e91e63;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    
+    /* Seção de relacionamento */
+    .relacionamento-section {
+        margin-top: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    /* Abas internas para casais */
+    .couple-tabs-control {
+        margin: 20px 0;
+    }
+    
+    .internal-tabs {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    
+    .internal-tab-btn {
+        padding: 12px 24px;
+        background: #f0f0f0;
+        border: 2px solid #ddd;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .internal-tab-btn.active {
+        background: #e91e63;
+        color: white;
+        border-color: #e91e63;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(233, 30, 99, 0.3);
+    }
+    
+    .internal-tab-btn:hover:not(.active) {
+        background: #e0e0e0;
+        border-color: #e91e63;
+        color: #e91e63;
+    }
+    
+    /* Painéis de pessoa */
+    .person-panel {
+        display: none;
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        margin-bottom: 20px;
+    }
+    
+    .person-panel.active {
+        display: block;
+    }
+    
+    .person-panel h3 {
+        color: #e91e63;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e91e63;
+        font-size: 20px;
+    }
+    
+    /* Seções de interesse */
+    .interest-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .interest-section h3 {
+        color: #e91e63;
+        margin-bottom: 15px;
+        font-size: 18px;
+    }
+    
+    .interest-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 10px;
+    }
+    
+    .interest-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .interest-item:hover {
+        border-color: #e91e63;
+        background: #fef7f7;
+    }
+    
+    .interest-item input[type="checkbox"] {
+        margin-right: 10px;
+        transform: scale(1.2);
+    }
+    
+    .interest-label {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .radio-group {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .radio-item {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .radio-item:hover {
+        border-color: #e91e63;
+        background: #fef7f7;
+    }
+    
+    .radio-item input[type="radio"] {
+        margin-right: 10px;
+        transform: scale(1.2);
+    }
+    
+    .radio-label {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        background: #fff3cd;
+        border: 2px solid #ffeaa7;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .checkbox-item:hover {
+        background: #fff8e1;
+        border-color: #e91e63;
+    }
+    
+    .checkbox-item input[type="checkbox"] {
+        margin-right: 10px;
+        transform: scale(1.2);
+    }
+    
+    .checkbox-label {
+        font-weight: 600;
+        color: #333;
+    }
+    
+    /* Seções sobre */
+    .about-section {
+        margin-bottom: 25px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .about-section h3 {
+        color: #e91e63;
+        margin-bottom: 15px;
+        font-size: 18px;
+    }
+    
+    .form-text {
+        color: #666;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+    
+    /* Responsividade para mobile */
+    @media (max-width: 768px) {
+        .internal-tabs {
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .internal-tab-btn {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+        
+        .person-panel {
+            padding: 15px;
+        }
+        
+        .person-panel h3 {
+            font-size: 18px;
+        }
+        
+        .row {
+            margin: 0;
+        }
+        
+        .col-6, .col-4 {
+            padding: 0 5px;
+            margin-bottom: 10px;
+        }
+        
+        .interest-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .radio-group {
+            grid-template-columns: 1fr;
+        }
+        
+        .interest-section, .about-section {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header Fixo -->
+    <div class="header-fixed">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="geral">Geral</button>
+            <button class="tab-btn" data-tab="informacoes">Informações</button>
+            <button class="tab-btn" data-tab="interesses">Interesses</button>
+            <button class="tab-btn" data-tab="sobre">Sobre</button>
+        </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div class="content">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Aba Geral -->
+            <div id="geral" class="tab-content active">
+                <h2>Informações Básicas</h2>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">Nome do Perfil</label>
+                            <input type="text" name="username" class="form-control" value="{{ user.username }}">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Perfil</label>
+                            <select name="tipo_perfil" class="form-control" id="tipo-perfil-select">
+                                {% for value, label in user.PERFIL_CHOICES %}
+                                    {% if value != '' %}
+                                        <option value="{{ value }}" {% if user.tipo_perfil == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% else %}
+                                        <optgroup label="{{ label }}"></optgroup>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campos de relacionamento (aparecem apenas para casais) -->
+                <div id="relacionamento-section" class="relacionamento-section" style="display: none;">
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Relação</label>
+                                <select name="tipo_relacionamento" class="form-control">
+                                    <option value="">Selecione</option>
+                                    {% for rel in tipos_relacionamento %}
+                                        <option value="{{ rel.id }}" {% if user.tipo_relacionamento_id == rel.id %}selected{% endif %}>
+                                            {{ rel.nome }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Tempo Juntos</label>
+                                <select name="tempo_juntos" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="menos_1_ano" {% if user.tempo_juntos == 'menos_1_ano' %}selected{% endif %}>Menos de 1 ano</option>
+                                    <option value="1_2_anos" {% if user.tempo_juntos == '1_2_anos' %}selected{% endif %}>1-2 anos</option>
+                                    <option value="3_5_anos" {% if user.tempo_juntos == '3_5_anos' %}selected{% endif %}>3-5 anos</option>
+                                    <option value="6_10_anos" {% if user.tempo_juntos == '6_10_anos' %}selected{% endif %}>6-10 anos</option>
+                                    <option value="mais_10_anos" {% if user.tempo_juntos == 'mais_10_anos' %}selected{% endif %}>Mais de 10 anos</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Cidade/Estado</label>
+                    <div class="autocomplete-container">
+                        <input type="text" 
+                               id="cidade-input" 
+                               class="form-control" 
+                               name="cidade_estado" 
+                               value="{% if user.cidade_ref %}{{ user.cidade_ref.nome_completo }}{% elif user.cidade and user.estado %}{{ user.cidade }}, {{ user.estado }}{% endif %}"
+                               placeholder="Digite sua cidade (ex: Palotina, Paraná)"
+                               autocomplete="off">
+                        <div id="suggestions" class="suggestions-dropdown"></div>
+                    </div>
+                    <!-- Hidden fields para compatibilidade -->
+                    <input type="hidden" id="cidade_nome" name="cidade" value="{% if user.cidade_ref %}{{ user.cidade_ref.nome }}{% else %}{{ user.cidade }}{% endif %}">
+                    <input type="hidden" id="estado" name="estado" value="{% if user.cidade_ref %}{{ user.cidade_ref.estado }}{% else %}{{ user.estado }}{% endif %}">
+                    <input type="hidden" id="cidade_ref" name="cidade_ref" value="{% if user.cidade_ref %}{{ user.cidade_ref.id }}{% endif %}">
+                </div>
+            </div>
+
+            <!-- Aba Informações -->
+            <div id="informacoes" class="tab-content">
+                <h2>Informações Pessoais</h2>
+                
+                <!-- Controle de abas internas para casais -->
+                <div id="couple-tabs-control" class="couple-tabs-control" style="display: none;">
+                    <div class="internal-tabs">
+                        <button type="button" class="internal-tab-btn active" data-person="ele">
+                            👨 Ele
+                        </button>
+                        <button type="button" class="internal-tab-btn" data-person="ela">
+                            👩 Ela
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Painel para Ele -->
+                <div id="painel-ele" class="person-panel active">
+                    <h3>👨 Dados Pessoais - Ele</h3>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Nome / Apelido</label>
+                                <input type="text" name="nome_ele" class="form-control" placeholder="Nome ou apelido público">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Data de Nascimento</label>
+                                <input type="date" name="data_nascimento_ele" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Profissão</label>
+                                <input type="text" name="profissao_ele" class="form-control" placeholder="Sua profissão">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Orientação Sexual</label>
+                                <select name="orientacao_ele" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="heterossexual">Heterossexual</option>
+                                    <option value="bissexual">Bissexual</option>
+                                    <option value="homossexual">Homossexual</option>
+                                    <option value="pansexual">Pansexual</option>
+                                    <option value="assexual">Assexual</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="form-group">
+                                <label class="form-label">Altura (cm)</label>
+                                <input type="number" name="altura_ele" class="form-control" placeholder="Ex: 175" min="100" max="250">
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group">
+                                <label class="form-label">Peso (kg)</label>
+                                <input type="number" name="peso_ele" class="form-control" placeholder="Ex: 70" min="30" max="300">
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group">
+                                <label class="form-label">Signo</label>
+                                <select name="signo_ele" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="aries">Áries</option>
+                                    <option value="touro">Touro</option>
+                                    <option value="gemeos">Gêmeos</option>
+                                    <option value="cancer">Câncer</option>
+                                    <option value="leao">Leão</option>
+                                    <option value="virgem">Virgem</option>
+                                    <option value="libra">Libra</option>
+                                    <option value="escorpiao">Escorpião</option>
+                                    <option value="sagitario">Sagitário</option>
+                                    <option value="capricornio">Capricórnio</option>
+                                    <option value="aquario">Aquário</option>
+                                    <option value="peixes">Peixes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Estado Civil</label>
+                                <select name="estado_civil_ele" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="solteiro">Solteiro(a)</option>
+                                    <option value="namorando">Namorando</option>
+                                    <option value="casado">Casado(a)</option>
+                                    <option value="uniao_estavel">União Estável</option>
+                                    <option value="divorciado">Divorciado(a)</option>
+                                    <option value="viuvo">Viúvo(a)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Etnia</label>
+                                <select name="etnia_ele" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="branco">Branco</option>
+                                    <option value="negro">Negro</option>
+                                    <option value="pardo">Pardo</option>
+                                    <option value="amarelo">Amarelo</option>
+                                    <option value="indigena">Indígena</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Cabelos</label>
+                                <select name="cabelos_ele" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="pretos_curto">Pretos (curto)</option>
+                                    <option value="pretos_medio">Pretos (médio)</option>
+                                    <option value="pretos_longo">Pretos (longo)</option>
+                                    <option value="castanhos_curto">Castanhos (curto)</option>
+                                    <option value="castanhos_medio">Castanhos (médio)</option>
+                                    <option value="castanhos_longo">Castanhos (longo)</option>
+                                    <option value="loiros_curto">Loiros (curto)</option>
+                                    <option value="loiros_medio">Loiros (médio)</option>
+                                    <option value="loiros_longo">Loiros (longo)</option>
+                                    <option value="ruivos_curto">Ruivos (curto)</option>
+                                    <option value="ruivos_medio">Ruivos (médio)</option>
+                                    <option value="ruivos_longo">Ruivos (longo)</option>
+                                    <option value="careca">Careca</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Olhos</label>
+                                <select name="olhos_ele" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="pretos">Pretos</option>
+                                    <option value="castanhos">Castanhos</option>
+                                    <option value="azuis">Azuis</option>
+                                    <option value="verdes">Verdes</option>
+                                    <option value="cinzas">Cinzas</option>
+                                    <option value="mel">Mel</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Corpo</label>
+                                <select name="tipo_corpo_ele" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="magro">Magro</option>
+                                    <option value="atletico">Atlético</option>
+                                    <option value="normal">Normal</option>
+                                    <option value="acima_peso">Acima do peso</option>
+                                    <option value="musculoso">Musculoso</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Fumante</label>
+                                <select name="fumante_ele" class="form-control">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                    <option value="ocasionalmente">Ocasionalmente</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Bebe</label>
+                                <select name="bebe_ele" class="form-control">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                    <option value="socialmente">Socialmente</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Descrição Pessoal</label>
+                                <textarea name="descricao_ele" class="form-control" rows="3" placeholder="Como se define em poucas palavras?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Painel para Ela -->
+                <div id="painel-ela" class="person-panel">
+                    <h3>👩 Dados Pessoais - Ela</h3>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Nome / Apelido</label>
+                                <input type="text" name="nome_ela" class="form-control" placeholder="Nome ou apelido público">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Data de Nascimento</label>
+                                <input type="date" name="data_nascimento_ela" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Profissão</label>
+                                <input type="text" name="profissao_ela" class="form-control" placeholder="Sua profissão">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Orientação Sexual</label>
+                                <select name="orientacao_ela" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="heterossexual">Heterossexual</option>
+                                    <option value="bissexual">Bissexual</option>
+                                    <option value="homossexual">Homossexual</option>
+                                    <option value="pansexual">Pansexual</option>
+                                    <option value="assexual">Assexual</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="form-group">
+                                <label class="form-label">Altura (cm)</label>
+                                <input type="number" name="altura_ela" class="form-control" placeholder="Ex: 165" min="100" max="250">
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group">
+                                <label class="form-label">Peso (kg)</label>
+                                <input type="number" name="peso_ela" class="form-control" placeholder="Ex: 60" min="30" max="300">
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group">
+                                <label class="form-label">Signo</label>
+                                <select name="signo_ela" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="aries">Áries</option>
+                                    <option value="touro">Touro</option>
+                                    <option value="gemeos">Gêmeos</option>
+                                    <option value="cancer">Câncer</option>
+                                    <option value="leao">Leão</option>
+                                    <option value="virgem">Virgem</option>
+                                    <option value="libra">Libra</option>
+                                    <option value="escorpiao">Escorpião</option>
+                                    <option value="sagitario">Sagitário</option>
+                                    <option value="capricornio">Capricórnio</option>
+                                    <option value="aquario">Aquário</option>
+                                    <option value="peixes">Peixes</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Estado Civil</label>
+                                <select name="estado_civil_ela" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="solteiro">Solteiro(a)</option>
+                                    <option value="namorando">Namorando</option>
+                                    <option value="casado">Casado(a)</option>
+                                    <option value="uniao_estavel">União Estável</option>
+                                    <option value="divorciado">Divorciado(a)</option>
+                                    <option value="viuvo">Viúvo(a)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Etnia</label>
+                                <select name="etnia_ela" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="branco">Branco</option>
+                                    <option value="negro">Negro</option>
+                                    <option value="pardo">Pardo</option>
+                                    <option value="amarelo">Amarelo</option>
+                                    <option value="indigena">Indígena</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Cabelos</label>
+                                <select name="cabelos_ela" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="pretos_curto">Pretos (curto)</option>
+                                    <option value="pretos_medio">Pretos (médio)</option>
+                                    <option value="pretos_longo">Pretos (longo)</option>
+                                    <option value="castanhos_curto">Castanhos (curto)</option>
+                                    <option value="castanhos_medio">Castanhos (médio)</option>
+                                    <option value="castanhos_longo">Castanhos (longo)</option>
+                                    <option value="loiros_curto">Loiros (curto)</option>
+                                    <option value="loiros_medio">Loiros (médio)</option>
+                                    <option value="loiros_longo">Loiros (longo)</option>
+                                    <option value="ruivos_curto">Ruivos (curto)</option>
+                                    <option value="ruivos_medio">Ruivos (médio)</option>
+                                    <option value="ruivos_longo">Ruivos (longo)</option>
+                                    <option value="careca">Careca</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Olhos</label>
+                                <select name="olhos_ela" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="pretos">Pretos</option>
+                                    <option value="castanhos">Castanhos</option>
+                                    <option value="azuis">Azuis</option>
+                                    <option value="verdes">Verdes</option>
+                                    <option value="cinzas">Cinzas</option>
+                                    <option value="mel">Mel</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Corpo</label>
+                                <select name="tipo_corpo_ela" class="form-control">
+                                    <option value="">Selecione</option>
+                                    <option value="magro">Magro</option>
+                                    <option value="atletico">Atlético</option>
+                                    <option value="normal">Normal</option>
+                                    <option value="acima_peso">Acima do peso</option>
+                                    <option value="musculoso">Musculoso</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Fumante</label>
+                                <select name="fumante_ela" class="form-control">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                    <option value="ocasionalmente">Ocasionalmente</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Bebe</label>
+                                <select name="bebe_ela" class="form-control">
+                                    <option value="nao">Não</option>
+                                    <option value="sim">Sim</option>
+                                    <option value="socialmente">Socialmente</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Descrição Pessoal</label>
+                                <textarea name="descricao_ela" class="form-control" rows="3" placeholder="Como se define em poucas palavras?"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Interesses -->
+            <div id="interesses" class="tab-content">
+                <h2>Interesses e Preferências</h2>
+                
+                <!-- Procurando por -->
+                <div class="interest-section">
+                    <h3>🔍 Procurando por</h3>
+                    <div class="interest-grid">
+                        <label class="interest-item">
+                            <input type="checkbox" name="procurando_casais" value="casais">
+                            <span class="interest-label">👫 Casais</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="procurando_mulheres" value="mulheres">
+                            <span class="interest-label">👩 Mulheres</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="procurando_homens" value="homens">
+                            <span class="interest-label">👨 Homens</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="procurando_grupos" value="grupos">
+                            <span class="interest-label">👥 Grupos</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="procurando_amizades" value="amizades">
+                            <span class="interest-label">🤝 Amizades</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="procurando_experiencias" value="experiencias">
+                            <span class="interest-label">🌟 Experiências</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Objetivos -->
+                <div class="interest-section">
+                    <h3>🎯 Objetivos</h3>
+                    <div class="interest-grid">
+                        <label class="interest-item">
+                            <input type="checkbox" name="objetivo_amizades" value="amizades">
+                            <span class="interest-label">💬 Amizades</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="objetivo_relacionamento" value="relacionamento">
+                            <span class="interest-label">💕 Relacionamento</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="objetivo_troca" value="troca">
+                            <span class="interest-label">🔄 Troca de casais</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="objetivo_aventura" value="aventura">
+                            <span class="interest-label">🎪 Aventura</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="objetivo_relacao_aberta" value="relacao_aberta">
+                            <span class="interest-label">🔓 Relação aberta</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="objetivo_curiosidade" value="curiosidade">
+                            <span class="interest-label">🔍 Curiosidade</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Preferências -->
+                <div class="interest-section">
+                    <h3>💫 Preferências e Afinidades</h3>
+                    <div class="interest-grid">
+                        <label class="interest-item">
+                            <input type="checkbox" name="preferencia_romantico" value="romantico">
+                            <span class="interest-label">🌹 Romântico</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="preferencia_aventureiro" value="aventureiro">
+                            <span class="interest-label">🏔️ Aventureiro</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="preferencia_intimista" value="intimista">
+                            <span class="interest-label">🕯️ Intimista</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="preferencia_social" value="social">
+                            <span class="interest-label">🎉 Social</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="preferencia_privacidade" value="privacidade">
+                            <span class="interest-label">🔒 Privacidade</span>
+                        </label>
+                        <label class="interest-item">
+                            <input type="checkbox" name="preferencia_publico" value="publico">
+                            <span class="interest-label">🌐 Público</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Nível de abertura -->
+                <div class="interest-section">
+                    <h3>🔓 Nível de Abertura</h3>
+                    <div class="radio-group">
+                        <label class="radio-item">
+                            <input type="radio" name="nivel_abertura" value="conservador">
+                            <span class="radio-label">🔒 Conservador</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="nivel_abertura" value="moderado">
+                            <span class="radio-label">🔓 Moderado</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="nivel_abertura" value="aberto">
+                            <span class="radio-label">🔓 Aberto</span>
+                        </label>
+                        <label class="radio-item">
+                            <input type="radio" name="nivel_abertura" value="muito_aberto">
+                            <span class="radio-label">🔓🔓 Muito Aberto</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Checkbox de idade -->
+                <div class="interest-section">
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="maior_18" value="sim" checked>
+                        <span class="checkbox-label">🔞 Confirmo que sou maior de 18 anos</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Aba Sobre -->
+            <div id="sobre" class="tab-content">
+                <h2>Sobre Nós</h2>
+                
+                <!-- Quem somos -->
+                <div class="about-section">
+                    <h3>👥 Quem Somos</h3>
+                    <div class="form-group">
+                        <label class="form-label">Apresentação do Casal</label>
+                        <textarea name="quem_somos" class="form-control" rows="4" 
+                                placeholder="Conte quem vocês são, como se conheceram, o que os une..."></textarea>
+                        <small class="form-text">Máximo 500 caracteres</small>
+                    </div>
+                </div>
+                
+                <!-- O que nos inspira -->
+                <div class="about-section">
+                    <h3>✨ O que nos inspira</h3>
+                    <div class="form-group">
+                        <label class="form-label">Nossos Valores e Inspirações</label>
+                        <textarea name="inspiracao" class="form-control" rows="3" 
+                                placeholder="O que vocês buscam, o que os inspira, seus valores..."></textarea>
+                        <small class="form-text">Máximo 300 caracteres</small>
+                    </div>
+                </div>
+                
+                <!-- Frase de destaque -->
+                <div class="about-section">
+                    <h3>💬 Frase de Destaque</h3>
+                    <div class="form-group">
+                        <label class="form-label">Frase que nos representa</label>
+                        <input type="text" name="frase_destaque" class="form-control" 
+                               placeholder="Uma frase que define vocês como casal" maxlength="100">
+                        <small class="form-text">Esta frase aparecerá na capa do perfil</small>
+                    </div>
+                </div>
+                
+                <!-- Links externos -->
+                <div class="about-section">
+                    <h3>🔗 Links Externos (Opcional)</h3>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Instagram</label>
+                                <input type="url" name="instagram" class="form-control" 
+                                       placeholder="@usuario ou link completo">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Outro Link</label>
+                                <input type="url" name="outro_link" class="form-control" 
+                                       placeholder="Site, blog, etc.">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bio individual (para casais) -->
+                <div id="bio-individual" class="about-section" style="display: none;">
+                    <h3>👤 Biografias Individuais</h3>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Bio - Ele</label>
+                                <textarea name="bio_ele" class="form-control" rows="3" 
+                                        placeholder="Conte sobre ele..."></textarea>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="form-label">Bio - Ela</label>
+                                <textarea name="bio_ela" class="form-control" rows="3" 
+                                        placeholder="Conte sobre ela..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bio individual (para pessoas solteiras) -->
+                <div id="bio-solteiro" class="about-section">
+                    <h3>👤 Minha História</h3>
+                    <div class="form-group">
+                        <label class="form-label">Sua Biografia</label>
+                        <textarea name="bio_individual" class="form-control" rows="4" 
+                                placeholder="Conte sua história, seus interesses, o que te move..."></textarea>
+                        <small class="form-text">Máximo 400 caracteres</small>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Botão Salvar -->
+<button class="save-btn" onclick="document.querySelector('form').submit()">
+    💾 Salvar
+</button>
+
+<script>
+// Sistema de Abas SIMPLES
+document.addEventListener('DOMContentLoaded', function() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
+            // Remover active de todos
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            
+            // Ativar selecionado
+            this.classList.add('active');
+            document.getElementById(targetTab).classList.add('active');
+        });
+    });
+    
+           // Controle do tipo de perfil
+           const tipoPerfilSelect = document.getElementById('tipo-perfil-select');
+           const relacionamentoSection = document.getElementById('relacionamento-section');
+           const coupleTabsControl = document.getElementById('couple-tabs-control');
+           
+           function toggleRelacionamentoSection() {
+               const tipoPerfil = tipoPerfilSelect.value;
+               const bioIndividual = document.getElementById('bio-individual');
+               const bioSolteiro = document.getElementById('bio-solteiro');
+               
+               if (tipoPerfil && tipoPerfil.startsWith('casal_')) {
+                   relacionamentoSection.style.display = 'block';
+                   coupleTabsControl.style.display = 'block';
+                   bioIndividual.style.display = 'block';
+                   bioSolteiro.style.display = 'none';
+               } else {
+                   relacionamentoSection.style.display = 'none';
+                   coupleTabsControl.style.display = 'none';
+                   bioIndividual.style.display = 'none';
+                   bioSolteiro.style.display = 'block';
+               }
+           }
+           
+           tipoPerfilSelect.addEventListener('change', toggleRelacionamentoSection);
+           toggleRelacionamentoSection(); // Executar na inicialização
+           
+           // Controle das abas internas (Ele/Ela)
+           const internalTabBtns = document.querySelectorAll('.internal-tab-btn');
+           const personPanels = document.querySelectorAll('.person-panel');
+           
+           internalTabBtns.forEach(btn => {
+               btn.addEventListener('click', function(e) {
+                   e.preventDefault(); // Prevenir comportamento padrão
+                   e.stopPropagation(); // Parar propagação do evento
+                   
+                   const targetPerson = this.getAttribute('data-person');
+                   
+                   // Remover active de todos
+                   internalTabBtns.forEach(b => b.classList.remove('active'));
+                   personPanels.forEach(p => p.classList.remove('active'));
+                   
+                   // Ativar selecionado
+                   this.classList.add('active');
+                   document.getElementById(`painel-${targetPerson}`).classList.add('active');
+               });
+           });
+    
+    // Autocomplete para cidades
+    const cidadeInput = document.getElementById('cidade-input');
+    const suggestionsDiv = document.getElementById('suggestions');
+    
+    let cidades = [];
+    let selectedCity = null;
+    
+    // Carregar cidades da API
+    fetch('/usuarios/api/cidades/')
+        .then(response => response.json())
+        .then(data => {
+            cidades = data;
+            console.log('Cidades carregadas:', cidades.length);
+        })
+        .catch(error => {
+            console.error('Erro ao carregar cidades:', error);
+        });
+    
+    function showSuggestions(cities) {
+        suggestionsDiv.innerHTML = '';
+        
+        if (cities.length === 0) {
+            suggestionsDiv.style.display = 'none';
+            return;
+        }
+        
+        cities.forEach(city => {
+            const item = document.createElement('div');
+            item.className = 'suggestion-item';
+            item.innerHTML = `
+                <span class="suggestion-city">${city.nome}</span>
+                <span class="suggestion-state">${city.estado}</span>
+            `;
+            
+            item.addEventListener('click', function() {
+                selectCity(city);
+            });
+            
+            suggestionsDiv.appendChild(item);
+        });
+        
+        suggestionsDiv.style.display = 'block';
+    }
+    
+    function selectCity(city) {
+        selectedCity = city;
+        cidadeInput.value = city.nome_completo;
+        
+        // Preencher campos hidden
+        document.getElementById('cidade_nome').value = city.nome;
+        document.getElementById('estado').value = city.estado;
+        document.getElementById('cidade_ref').value = city.id;
+        
+        suggestionsDiv.style.display = 'none';
+    }
+    
+    function searchCities(query) {
+        if (query.length < 2) {
+            suggestionsDiv.style.display = 'none';
+            selectedCity = null;
+            return;
+        }
+        
+        const queryLower = query.toLowerCase();
+        const filtered = cidades.filter(city => 
+            city.nome.toLowerCase().includes(queryLower) ||
+            city.estado.toLowerCase().includes(queryLower) ||
+            city.nome_completo.toLowerCase().includes(queryLower)
+        );
+        
+        showSuggestions(filtered.slice(0, 10)); // Limitar a 10 resultados
+    }
+    
+    // Event listeners para cidade
+    cidadeInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        // Reset selection if user types something different
+        if (selectedCity && !this.value.includes(selectedCity.nome)) {
+            selectedCity = null;
+            document.getElementById('cidade_nome').value = '';
+            document.getElementById('estado').value = '';
+            document.getElementById('cidade_ref').value = '';
+        }
+        
+        searchCities(query);
+    });
+    
+    cidadeInput.addEventListener('focus', function() {
+        if (this.value.trim().length >= 2) {
+            searchCities(this.value.trim());
+        }
+    });
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!cidadeInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+            suggestionsDiv.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}
